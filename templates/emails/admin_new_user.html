@@ -1,0 +1,23 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+    <h2>Novo Usuário Aguardando Aprovação</h2>
+    
+    <p>Um novo usuário verificou o email e está aguardando aprovação:</p>
+    
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+        <p><strong>Nome:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>CPF:</strong> {{ user.cpf }}</p>
+        <p><strong>Username:</strong> {{ user.username }}</p>
+        <p><strong>Data de Cadastro:</strong> {{ user.created_at|date:"d/m/Y H:i" }}</p>
+    </div>
+    
+    <p>Para aprovar ou rejeitar este usuário, acesse o painel administrativo:</p>
+    
+    <div style="text-align: center;">
+        <a href="{{ admin_panel_link }}" class="btn">🔐 Acessar Painel Admin</a>
+    </div>
+    
+    <p>Atenciosamente,<br>Sistema ReserveMe</p>
+{% endblock %}

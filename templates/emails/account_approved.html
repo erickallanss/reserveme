@@ -1,0 +1,19 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+    <h2>Parabéns, {{ user_name }}! 🎉</h2>
+    
+    <p>Sua conta no <strong>ReserveMe</strong> foi aprovada!</p>
+    
+    <p>Você já pode fazer login e começar a usar nosso sistema.</p>
+    
+    <div style="text-align: center;">
+        <a href="{{ login_link }}" class="btn">🔓 Fazer Login</a>
+    </div>
+    
+    <p>Aproveite todos os recursos que o ReserveMe tem a oferecer!</p>
+    
+    <p>Se tiver alguma dúvida, não hesite em entrar em contato conosco.</p>
+    
+    <p>Bem-vindo a bordo!<br>Equipe ReserveMe</p>
+{% endblock %}

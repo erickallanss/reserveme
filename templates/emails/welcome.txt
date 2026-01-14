@@ -1,0 +1,20 @@
+Bem-vindo ao ReserveMe!
+
+Olá {{ user_name }},
+
+Estamos muito felizes em tê-lo conosco! Sua conta foi criada com sucesso.
+
+Agora você pode começar a usar todos os recursos da plataforma ReserveMe.
+
+{% if activation_link %}
+Ative sua conta acessando: {{ activation_link }}
+{% endif %}
+
+Se você tiver alguma dúvida, não hesite em nos contatar.
+
+Atenciosamente,
+Equipe ReserveMe
+
+---
+© {{ year }} ReserveMe. Todos os direitos reservados.
+Este é um email automático, por favor não responda.

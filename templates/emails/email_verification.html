@@ -1,0 +1,22 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+    <h2>Olá, {{ user_name }}!</h2>
+    
+    <p>Bem-vindo ao <strong>ReserveMe</strong>! 🎉</p>
+    
+    <p>Obrigado por se cadastrar. Para ativar sua conta, por favor verifique seu endereço de email clicando no botão abaixo:</p>
+    
+    <div style="text-align: center;">
+        <a href="{{ verification_link }}" class="btn">✅ Verificar Email</a>
+    </div>
+    
+    <p>Ou copie e cole este link no seu navegador:</p>
+    <p style="word-break: break-all; color: #667eea;">{{ verification_link }}</p>
+    
+    <p><strong>Importante:</strong> Após verificar seu email, sua conta será analisada por nossa equipe antes de ser aprovada.</p>
+    
+    <p>Se você não se cadastrou no ReserveMe, por favor ignore este email.</p>
+    
+    <p>Atenciosamente,<br>Equipe ReserveMe</p>
+{% endblock %}
