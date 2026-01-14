@@ -36,6 +36,10 @@ db.sqlite3-journal
 media/
 staticfiles/
 
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
 # Environment variables
 .env
 .env.local
@@ -54,3 +58,12 @@ Thumbs.db
 
 # Docker
 .dockerignore
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# UV
+.python-version
