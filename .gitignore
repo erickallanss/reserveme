@@ -56,9 +56,6 @@ celerybeat.pid
 .DS_Store
 Thumbs.db
 
-# Docker
-.dockerignore
-
 # Testing
 .pytest_cache/
 .coverage
