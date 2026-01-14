@@ -83,10 +83,62 @@ docker-compose exec web python manage.py <comando>
 docker-compose exec web bash
 ```
 
+## Serviços
+
+O projeto inclui os seguintes serviços:
+
+- **web**: Aplicação Django (porta 8000)
+- **db**: PostgreSQL (porta 5432)
+- **redis**: Redis para Celery (porta 6379)
+- **celery**: Worker do Celery para processar tarefas assíncronas
+- **celery-beat**: Scheduler do Celery para tarefas periódicas
+
+### Ver logs dos serviços
+
+```bash
+# Logs de todos os serviços
+docker-compose logs -f
+
+# Logs de um serviço específico
+docker-compose logs -f celery
+docker-compose logs -f celery-beat
+```
+
+### Comandos Celery
+
+```bash
+# Executar worker manualmente
+docker-compose exec celery celery -A core worker --loglevel=info
+
+# Executar beat manualmente
+docker-compose exec celery-beat celery -A core beat --loglevel=info
+
+# Verificar status do Celery
+docker-compose exec celery celery -A core inspect active
+```
+
 ## Desenvolvimento
 
 O projeto usa:
 - **Django 5.x**: Framework web
 - **PostgreSQL**: Banco de dados
+- **Redis**: Broker e backend de resultados para Celery
+- **Celery**: Processamento de tarefas assíncronas
+- **Celery Beat**: Agendamento de tarefas periódicas
 - **uv**: Gerenciador de pacotes Python
 - **Docker**: Containerização
+
+## Criando tarefas Celery
+
+Para criar uma nova tarefa, crie um arquivo `tasks.py` em sua app Django:
+
+```python
+from celery import shared_task
+
+@shared_task
+def minha_tarefa(parametro):
+    # Seu código aqui
+    return resultado
+```
+
+Para agendar tarefas periódicas, edite `CELERY_BEAT_SCHEDULE` em `core/settings.py`.
