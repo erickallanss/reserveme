@@ -65,7 +65,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -147,10 +147,18 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Custom User Model
+AUTH_USER_MODEL = 'reserveme.User'
+
+# Media Files (Upload)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'core.authentication.JWTCookieAuthentication',  # Cookies primeiro
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Header fallback
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
@@ -172,6 +180,16 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.FormParser',
         'rest_framework.parsers.MultiPartParser',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10/minute',  # Não autenticados
+        'user': '20/minute',  # Autenticados
+        'auth_login': '5/15min',  # Login específico
+        'auth_register': '3/hour',  # Registro específico
+    },
 }
 
 # JWT Configuration
@@ -189,6 +207,14 @@ SIMPLE_JWT = {
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 }
+
+# JWT Cookie Settings
+SIMPLE_JWT_COOKIE_NAME = 'access_token'
+SIMPLE_JWT_REFRESH_COOKIE_NAME = 'refresh_token'
+SIMPLE_JWT_COOKIE_SECURE = not DEBUG  # True em produção (HTTPS only)
+SIMPLE_JWT_COOKIE_HTTP_ONLY = True
+SIMPLE_JWT_COOKIE_SAMESITE = 'Lax'  # 'Strict' ou 'Lax' ou 'None'
+SIMPLE_JWT_COOKIE_PATH = '/'
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = os.environ.get(

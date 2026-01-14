@@ -9,8 +9,8 @@ WORKDIR /app
 # Copiar arquivos de dependências
 COPY pyproject.toml ./
 
-# Instalar dependências usando uv
-RUN uv pip install --system -e .
+# Instalar dependências usando uv (incluindo testes)
+RUN uv pip install --system -e ".[test]"
 
 # Copiar código da aplicação
 COPY . .
