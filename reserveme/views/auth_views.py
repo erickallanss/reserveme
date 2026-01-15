@@ -2,13 +2,12 @@
 Views para autenticação com JWT via HTTP-only cookies.
 """
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes, throttle_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
 from django.conf import settings
 from drf_spectacular.utils import extend_schema, OpenApiResponse
-from core.throttling import LoginThrottle, RegisterThrottle
 from reserveme.containers import container
 from reserveme.serializers import (
     UserRegisterSerializer,
@@ -30,7 +29,6 @@ from reserveme.serializers import (
 )
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@throttle_classes([RegisterThrottle])
 def register(request: Request) -> Response:
     """
     Registra novo usuário no sistema.
@@ -70,7 +68,6 @@ def register(request: Request) -> Response:
 )
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@throttle_classes([LoginThrottle])
 def login(request: Request) -> Response:
     """
     Realiza login e retorna tokens JWT via HTTP-only cookies.
