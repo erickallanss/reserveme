@@ -4,7 +4,13 @@ Testes unitários para AuthService.
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from django.contrib.auth import get_user_model
-from rest_framework.exceptions import AuthenticationFailed, ValidationError, PermissionDenied
+from rest_framework.exceptions import ValidationError, PermissionDenied
+from core.exceptions import (
+    InvalidCredentialsError,
+    InvalidTokenError,
+    EmailNotVerifiedError,
+    InvalidVerificationTokenError,
+)
 from reserveme.services.auth_service import AuthService
 from reserveme.repositories.user_repository import UserRepository
 from reserveme.tests.factories import UserFactory, ApprovedUserFactory, AdminUserFactory
@@ -66,10 +72,8 @@ class TestAuthService:
         """Testa login com email inválido."""
         user_repository.get_by_email.return_value = None
         
-        with pytest.raises(AuthenticationFailed) as exc:
+        with pytest.raises(InvalidCredentialsError):
             auth_service.login('invalid@example.com', 'password')
-        
-        assert 'Email ou senha incorretos' in str(exc.value)
     
     def test_login_invalid_password(self, auth_service, user_repository):
         """Testa login com senha inválida."""
@@ -79,60 +83,42 @@ class TestAuthService:
         
         user_repository.get_by_email.return_value = user
         
-        with pytest.raises(AuthenticationFailed) as exc:
+        with pytest.raises(InvalidCredentialsError):
             auth_service.login(user.email, 'wrong_password')
-        
-        assert 'Email ou senha incorretos' in str(exc.value)
     
     def test_login_email_not_verified(self, auth_service, user_repository):
         """Testa login com email não verificado."""
-        user = UserFactory(email_verified=False, is_approved=True)
+        user = UserFactory(email_verified=False)
         user.set_password('TestPass123!@#')
         user.save()
         
         user_repository.get_by_email.return_value = user
         
-        with pytest.raises(PermissionDenied) as exc:
+        with pytest.raises(EmailNotVerifiedError):
             auth_service.login(user.email, 'TestPass123!@#')
-        
-        assert 'verifique seu email' in str(exc.value).lower()
     
-    def test_login_not_approved(self, auth_service, user_repository):
-        """Testa login com conta não aprovada."""
-        user = UserFactory(email_verified=True, is_approved=False)
-        user.set_password('TestPass123!@#')
-        user.save()
-        
-        user_repository.get_by_email.return_value = user
-        
-        with pytest.raises(PermissionDenied) as exc:
-            auth_service.login(user.email, 'TestPass123!@#')
-        
-        assert 'aprovação' in str(exc.value).lower()
     
     @patch('reserveme.services.auth_service.send_template_email_async')
     def test_verify_email_success(self, mock_email, auth_service, user_repository):
-        """Testa verificação de email."""
+        """Testa verificação de email e ativação da conta."""
         user = UserFactory(
             email_verified=False,
             email_verification_token='valid_token'
         )
         user_repository.get_by_verification_token.return_value = user
-        user_repository.get_by_role.return_value = []
         
         verified_user = auth_service.verify_email('valid_token')
         
         assert verified_user.email_verified is True
         assert verified_user.email_verification_token == ''
+        assert mock_email.called  # Verifica que email de ativação foi enviado
     
     def test_verify_email_invalid_token(self, auth_service, user_repository):
         """Testa verificação com token inválido."""
         user_repository.get_by_verification_token.return_value = None
         
-        with pytest.raises(ValidationError) as exc:
+        with pytest.raises(InvalidVerificationTokenError):
             auth_service.verify_email('invalid_token')
-        
-        assert 'inválido' in str(exc.value).lower()
     
     @patch('reserveme.services.auth_service.send_template_email_async')
     def test_resend_verification_email(self, mock_email, auth_service, user_repository):
@@ -177,43 +163,6 @@ class TestAuthService:
         
         assert 'incorreta' in str(exc.value).lower()
     
-    @patch('reserveme.services.auth_service.send_template_email_async')
-    def test_approve_user_by_admin(self, mock_email, auth_service, user_repository):
-        """Testa aprovação de usuário por admin."""
-        admin = AdminUserFactory()
-        user = UserFactory(email_verified=True, is_approved=False)
-        
-        user_repository.get_by_id.return_value = user
-        
-        approved_user = auth_service.approve_user(user.id, admin)
-        
-        assert approved_user.is_approved is True
-        assert mock_email.called
-    
-    def test_approve_user_not_admin(self, auth_service, user_repository):
-        """Testa que apenas admins podem aprovar."""
-        regular_user = ApprovedUserFactory(role='customer')
-        user = UserFactory()
-        
-        user_repository.get_by_id.return_value = user
-        
-        with pytest.raises(PermissionDenied) as exc:
-            auth_service.approve_user(user.id, regular_user)
-        
-        assert 'admin' in str(exc.value).lower()
-    
-    def test_approve_user_email_not_verified(self, auth_service, user_repository):
-        """Testa que não pode aprovar sem email verificado."""
-        admin = AdminUserFactory()
-        user = UserFactory(email_verified=False, is_approved=False)
-        
-        user_repository.get_by_id.return_value = user
-        
-        with pytest.raises(ValidationError) as exc:
-            auth_service.approve_user(user.id, admin)
-        
-        assert 'email' in str(exc.value).lower()
-    
     def test_refresh_token_success(self, auth_service, user_repository):
         """Testa refresh de token."""
         from rest_framework_simplejwt.tokens import RefreshToken
@@ -231,5 +180,5 @@ class TestAuthService:
     
     def test_refresh_token_invalid(self, auth_service):
         """Testa refresh com token inválido."""
-        with pytest.raises(AuthenticationFailed):
+        with pytest.raises(InvalidTokenError):
             auth_service.refresh_token('invalid_token')

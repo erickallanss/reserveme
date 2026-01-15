@@ -32,11 +32,6 @@ class TestUserModel:
         user = UserFactory(email_verified=False)
         assert user.can_login() is False
     
-    def test_can_login_not_approved(self):
-        """Testa que usuário não aprovado não pode logar."""
-        user = UserFactory(email_verified=True, is_approved=False)
-        assert user.can_login() is False
-    
     def test_can_login_inactive(self):
         """Testa que usuário inativo não pode logar."""
         user = ApprovedUserFactory(is_active=False)

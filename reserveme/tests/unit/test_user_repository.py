@@ -136,23 +136,6 @@ class TestUserRepository:
         
         assert user_repository.get_by_id(user_id) is None
     
-    def test_get_pending_approval(self, user_repository):
-        """Testa listagem de usuários pendentes de aprovação."""
-        # Criar usuário não aprovado mas com email verificado
-        UserFactory(email_verified=True, is_approved=False)
-        
-        # Criar usuário aprovado (não deve aparecer)
-        ApprovedUserFactory()
-        
-        # Criar usuário sem email verificado (não deve aparecer)
-        UserFactory(email_verified=False, is_approved=False)
-        
-        pending = list(user_repository.get_pending_approval())
-        
-        assert len(pending) == 1
-        assert pending[0].email_verified is True
-        assert pending[0].is_approved is False
-    
     def test_get_by_role(self, user_repository):
         """Testa busca por role."""
         UserFactory(role='customer')

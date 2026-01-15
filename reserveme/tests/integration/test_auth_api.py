@@ -52,7 +52,7 @@ class TestRegisterAPI:
         # Verificar se usuário foi criado
         user = User.objects.get(email=data['email'])
         assert user.email_verified is False
-        assert user.is_approved is False
+        assert user.is_active is True
     
     def test_register_duplicate_email(self, api_client):
         """Testa registro com email duplicado."""
@@ -155,7 +155,7 @@ class TestLoginAPI:
     
     def test_login_not_verified(self, api_client):
         """Testa login com email não verificado."""
-        user = UserFactory(email_verified=False, is_approved=True)
+        user = UserFactory(email_verified=False)
         user.set_password('TestPass123!@#')
         user.save()
         
@@ -167,25 +167,8 @@ class TestLoginAPI:
         
         response = api_client.post(url, data, format='json')
         
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
         assert 'email' in str(response.data).lower()
-    
-    def test_login_not_approved(self, api_client):
-        """Testa login com conta não aprovada."""
-        user = UserFactory(email_verified=True, is_approved=False)
-        user.set_password('TestPass123!@#')
-        user.save()
-        
-        url = reverse('auth-login')
-        data = {
-            'email': user.email,
-            'password': 'TestPass123!@#',
-        }
-        
-        response = api_client.post(url, data, format='json')
-        
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-        assert 'aprovação' in str(response.data).lower()
 
 
 @pytest.mark.django_db
@@ -303,7 +286,7 @@ class TestVerifyEmailAPI:
     """Testes para verificação de email."""
     
     def test_verify_email_success(self, api_client):
-        """Testa verificação de email."""
+        """Testa verificação de email e ativação da conta."""
         user = UserFactory(
             email_verified=False,
             email_verification_token='valid_token_123'
@@ -315,6 +298,7 @@ class TestVerifyEmailAPI:
         response = api_client.post(url, data, format='json')
         
         assert response.status_code == status.HTTP_200_OK
+        assert 'conta está ativa' in response.data['message'].lower()
         
         user.refresh_from_db()
         assert user.email_verified is True

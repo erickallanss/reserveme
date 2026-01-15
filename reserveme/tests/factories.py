@@ -24,7 +24,6 @@ class UserFactory(DjangoModelFactory):
     telefone = factory.LazyAttribute(lambda o: f'(11) 9{factory.Faker("random_int", min=1000, max=9999).evaluate(None, None, {"locale": None})}-{factory.Faker("random_int", min=1000, max=9999).evaluate(None, None, {"locale": None})}')
     
     is_active = True
-    is_approved = False
     email_verified = False
     role = 'customer'
 
@@ -33,7 +32,6 @@ class AdminUserFactory(UserFactory):
     """Factory para usuário Admin."""
     
     role = 'admin'
-    is_approved = True
     email_verified = True
     is_staff = True
     is_superuser = True
@@ -43,13 +41,11 @@ class StaffUserFactory(UserFactory):
     """Factory para usuário Staff."""
     
     role = 'staff'
-    is_approved = True
     email_verified = True
     is_staff = True
 
 
 class ApprovedUserFactory(UserFactory):
-    """Factory para usuário aprovado e verificado."""
+    """Factory para usuário verificado."""
     
-    is_approved = True
     email_verified = True
