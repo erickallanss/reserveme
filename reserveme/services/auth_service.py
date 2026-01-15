@@ -261,6 +261,7 @@ class AuthService:
             context={
                 'user_name': user.first_name or user.username,
                 'verification_link': verification_link,
+                'verification_token': token,
             },
             recipient_list=[user.email]
         )
