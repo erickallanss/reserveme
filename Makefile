@@ -36,6 +36,26 @@ setup: ## Setup completo: build, up, migrate
 	@echo "$(GREEN)✅ Setup completo!$(NC)"
 	@echo "$(YELLOW)📝 Acesse: http://localhost:8000/api/docs/$(NC)"
 
+server: ## Build, cria migrations, migra e sobe servidor
+	@echo "$(GREEN)🚀 Iniciando servidor completo...$(NC)"
+	@echo "$(GREEN)🔨 1/4 - Building containers...$(NC)"
+	@$(DOCKER_COMPOSE) build
+	@echo "$(GREEN)⬆️  2/4 - Subindo containers...$(NC)"
+	@$(DOCKER_COMPOSE) up -d
+	@echo "$(YELLOW)⏳ Aguardando containers iniciarem...$(NC)"
+	@sleep 5
+	@echo "$(GREEN)📝 3/4 - Criando migrations...$(NC)"
+	@$(DOCKER_EXEC) $(PYTHON) manage.py makemigrations
+	@echo "$(GREEN)📊 4/4 - Aplicando migrations...$(NC)"
+	@$(DOCKER_EXEC) $(PYTHON) manage.py migrate
+	@echo "$(GREEN)✅ Servidor rodando!$(NC)"
+	@echo ""
+	@echo "$(YELLOW)🌐 API: http://localhost:8000$(NC)"
+	@echo "$(YELLOW)📚 Docs: http://localhost:8000/api/docs/$(NC)"
+	@echo "$(YELLOW)📧 Mailpit: http://localhost:8025$(NC)"
+	@echo ""
+	@echo "$(GREEN)Para ver logs: make logs$(NC)"
+
 # ============================================================================
 # Docker
 # ============================================================================
