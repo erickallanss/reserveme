@@ -1,19 +1,249 @@
-{% extends "emails/base.html" %}
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title>Conta Ativada - ReserveMe</title>
+    
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    
+    <style>
+        :root {
+            color-scheme: light;
+            supported-color-schemes: light;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+        
+        img {
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+            -ms-interpolation-mode: bicubic;
+        }
+        
+        a {
+            text-decoration: none;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            .mobile-padding {
+                padding: 20px !important;
+            }
+            
+            .mobile-text-center {
+                text-align: center !important;
+            }
+            
+            .mobile-full-width {
+                width: 100% !important;
+                display: block !important;
+            }
+            
+            h1 {
+                font-size: 24px !important;
+            }
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .light-only {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
 
-{% block content %}
-    <h2>Parabéns, {{ user_name }}! 🎉</h2>
+<body style="margin: 0; padding: 0; width: 100%; background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
     
-    <p>Sua conta no <strong>ReserveMe</strong> foi aprovada!</p>
-    
-    <p>Você já pode fazer login e começar a usar nosso sistema.</p>
-    
-    <div style="text-align: center;">
-        <a href="{{ login_link }}" class="btn">🔓 Fazer Login</a>
+    <div role="article" aria-roledescription="email" aria-label="Conta ativada" lang="pt-BR" style="font-size: medium; font-size: max(16px, 1rem);">
+        
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; background-color: #f0f2f5;">
+            <tr>
+                <td align="center" style="padding: 40px 15px;">
+                    
+                    <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); overflow: hidden;">
+                        
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); padding: 48px 40px; text-align: center;">
+                                
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                    <tr>
+                                        <td align="center" style="padding-bottom: 24px;">
+                                            <div style="width: 80px; height: 80px; margin: 0 auto; background: rgba(255, 255, 255, 0.15); border-radius: 50%; display: inline-block; line-height: 80px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+                                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
+                                                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="white"/>
+                                                </svg>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center">
+                                            <h1 style="margin: 0; padding: 0; color: #ffffff; font-size: 32px; font-weight: 700; line-height: 1.2; letter-spacing: -0.5px;">
+                                                Conta Ativada!
+                                            </h1>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center" style="padding-top: 12px;">
+                                            <p style="margin: 0; color: rgba(255, 255, 255, 0.95); font-size: 16px; line-height: 1.5;">
+                                                Bem-vindo ao ReserveMe
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                                
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td class="mobile-padding" style="padding: 48px 40px;">
+                                
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                    
+                                    <tr>
+                                        <td style="padding-bottom: 8px;">
+                                            <p style="margin: 0; color: #1a202c; font-size: 18px; font-weight: 600; line-height: 1.3;">
+                                                Parabéns, {{ user_name }}!
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td style="padding-bottom: 32px;">
+                                            <p style="margin: 0; color: #4a5568; font-size: 15px; line-height: 1.6;">
+                                                Sua conta no <strong style="color: #48bb78; font-weight: 600;">ReserveMe</strong> foi ativada com sucesso! Você já pode fazer login e começar a usar todas as funcionalidades do nosso sistema.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td align="center" style="padding: 8px 0 32px 0;">
+                                            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                                <tr>
+                                                    <td align="center" style="border-radius: 12px; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); box-shadow: 0 10px 25px rgba(72, 187, 120, 0.4);">
+                                                        <a href="{{ login_link }}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 18px 48px; color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 12px; line-height: 1;">
+                                                            <span style="display: inline-block; vertical-align: middle; margin-right: 6px;">🔓</span>
+                                                            <span style="display: inline-block; vertical-align: middle;">Fazer Login</span>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td style="padding-bottom: 32px;">
+                                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #e6fffa; border-radius: 12px; border-left: 4px solid #38b2ac; overflow: hidden;">
+                                                <tr>
+                                                    <td style="padding: 20px;">
+                                                        
+                                                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                            <tr>
+                                                                <td width="32" valign="top">
+                                                                    <div style="width: 24px; height: 24px; background: #38b2ac; border-radius: 50%; text-align: center; line-height: 24px;">
+                                                                        <span style="color: #ffffff; font-size: 14px; font-weight: 700; vertical-align: middle;">i</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td style="padding-left: 12px;">
+                                                                    <p style="margin: 0 0 8px 0; color: #234e52; font-size: 13px; font-weight: 600; line-height: 1.3;">
+                                                                        O que você pode fazer agora?
+                                                                    </p>
+                                                                    <ul style="margin: 0; padding-left: 18px; color: #234e52; font-size: 12px; line-height: 1.6;">
+                                                                        <li style="margin-bottom: 4px;">Faça login na sua conta</li>
+                                                                        <li style="margin-bottom: 4px;">Complete seu perfil</li>
+                                                                        <li>Comece a usar o sistema de reservas</li>
+                                                                    </ul>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                        
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td style="border-top: 2px solid #e2e8f0; padding-top: 24px;">
+                                            <p style="margin: 0; color: #718096; font-size: 13px; line-height: 1.6; text-align: center;">
+                                                Aproveite todos os recursos que o ReserveMe tem a oferecer. Se tiver alguma dúvida, não hesite em entrar em contato conosco.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    
+                                </table>
+                                
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <td style="background: #f7fafc; padding: 32px 40px; border-top: 1px solid #e2e8f0;">
+                                
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                    <tr>
+                                        <td align="center" style="padding-bottom: 16px;">
+                                            <p style="margin: 0 0 4px 0; color: #1a202c; font-size: 20px; font-weight: 700; line-height: 1.2;">
+                                                ReserveMe
+                                            </p>
+                                            <p style="margin: 0; color: #718096; font-size: 13px;">
+                                                Seu sistema de reservas inteligente
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center" style="padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                                            <p style="margin: 0 0 12px 0; color: #a0aec0; font-size: 12px; line-height: 1.6;">
+                                                Este email foi enviado para você porque sua conta foi ativada no ReserveMe.
+                                            </p>
+                                            <p style="margin: 0; color: #cbd5e0; font-size: 11px;">
+                                                &copy; 2026 ReserveMe. Todos os direitos reservados.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                                
+                            </td>
+                        </tr>
+                        
+                    </table>
+                    
+                </td>
+            </tr>
+        </table>
+        
     </div>
     
-    <p>Aproveite todos os recursos que o ReserveMe tem a oferecer!</p>
-    
-    <p>Se tiver alguma dúvida, não hesite em entrar em contato conosco.</p>
-    
-    <p>Bem-vindo a bordo!<br>Equipe ReserveMe</p>
-{% endblock %}
+</body>
+</html>
