@@ -1,7 +1,4 @@
-"""
-Views para autenticação com JWT via HTTP-only cookies.
-Implementadas usando Class-Based Views seguindo best practices do DRF.
-"""
+"""Views para autenticação."""
 import logging
 from rest_framework import status
 from rest_framework.views import APIView
@@ -32,22 +29,8 @@ logger = logging.getLogger(__name__)
 
 
 class AuthMixin:
-    """
-    Mixin com métodos auxiliares para autenticação.
-    """
-    
     @staticmethod
     def set_auth_cookies(response: Response, tokens: dict) -> Response:
-        """
-        Configura cookies de autenticação na resposta.
-        
-        Args:
-            response: Response object do DRF
-            tokens: Dicionário com access e refresh tokens
-            
-        Returns:
-            Response com cookies configurados
-        """
         response.set_cookie(
             key=settings.SIMPLE_JWT_COOKIE_NAME,
             value=tokens['access'],
@@ -73,15 +56,6 @@ class AuthMixin:
     
     @staticmethod
     def delete_auth_cookies(response: Response) -> Response:
-        """
-        Remove cookies de autenticação da resposta.
-        
-        Args:
-            response: Response object do DRF
-            
-        Returns:
-            Response sem cookies de autenticação
-        """
         response.delete_cookie(
             key=settings.SIMPLE_JWT_COOKIE_NAME,
             path=settings.SIMPLE_JWT_COOKIE_PATH,
@@ -96,9 +70,6 @@ class AuthMixin:
 
 
 class RegisterAPIView(APIView, AuthMixin):
-    """
-    API para registro de novos usuários.
-    """
     permission_classes = [AllowAny]
     serializer_class = UserRegisterSerializer
     
@@ -111,11 +82,6 @@ class RegisterAPIView(APIView, AuthMixin):
         }
     )
     def post(self, request):
-        """
-        Registra novo usuário no sistema.
-        
-        O usuário receberá um email para verificação e precisará de aprovação manual.
-        """
         serializer = self.serializer_class(data=request.data)
         
         if not serializer.is_valid():
@@ -158,9 +124,6 @@ class RegisterAPIView(APIView, AuthMixin):
 
 
 class LoginAPIView(APIView, AuthMixin):
-    """
-    API para autenticação de usuários.
-    """
     permission_classes = [AllowAny]
     serializer_class = UserLoginSerializer
     
@@ -174,11 +137,6 @@ class LoginAPIView(APIView, AuthMixin):
         }
     )
     def post(self, request):
-        """
-        Realiza login e retorna tokens JWT via HTTP-only cookies.
-        
-        Os tokens são armazenados em cookies seguros (HTTP-only, Secure em produção).
-        """
         serializer = self.serializer_class(data=request.data)
         
         if not serializer.is_valid():
@@ -228,9 +186,6 @@ class LoginAPIView(APIView, AuthMixin):
 
 
 class LogoutAPIView(APIView, AuthMixin):
-    """
-    API para logout de usuários.
-    """
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
@@ -240,9 +195,6 @@ class LogoutAPIView(APIView, AuthMixin):
         }
     )
     def post(self, request):
-        """
-        Realiza logout removendo os cookies de autenticação.
-        """
         logger.info(
             f"Logout realizado: {request.user.email}",
             extra={'user_id': request.user.id, 'email': request.user.email}
@@ -269,9 +221,6 @@ class RefreshTokenAPIView(APIView, AuthMixin):
         }
     )
     def post(self, request):
-        """
-        Renova o access token usando o refresh token do cookie.
-        """
         refresh_token = request.COOKIES.get(settings.SIMPLE_JWT_REFRESH_COOKIE_NAME)
         
         if not refresh_token:
@@ -311,9 +260,6 @@ class RefreshTokenAPIView(APIView, AuthMixin):
 
 
 class VerifyEmailAPIView(APIView, AuthMixin):
-    """
-    API para verificação de email.
-    """
     permission_classes = [AllowAny]
     serializer_class = EmailVerificationSerializer
     
@@ -372,11 +318,6 @@ class VerifyEmailAPIView(APIView, AuthMixin):
 
 
 class UserProfileAPIView(APIView, AuthMixin):
-    """
-    API para gerenciar perfil do usuário autenticado.
-    
-    Endpoint: /api/v1/auth/me/
-    """
     permission_classes = [IsAuthenticated]
     
     @extend_schema(
@@ -386,9 +327,6 @@ class UserProfileAPIView(APIView, AuthMixin):
         }
     )
     def get(self, request):
-        """
-        Retorna os dados do usuário autenticado.
-        """
         logger.debug(
             f"Consulta de perfil: {request.user.email}",
             extra={'user_id': request.user.id}
@@ -405,9 +343,6 @@ class UserProfileAPIView(APIView, AuthMixin):
         }
     )
     def patch(self, request):
-        """
-        Atualiza os dados do usuário autenticado.
-        """
         serializer = UserUpdateSerializer(
             request.user,
             data=request.data,
@@ -472,9 +407,6 @@ class ChangePasswordAPIView(APIView, AuthMixin):
         }
     )
     def post(self, request):
-        """
-        Altera a senha do usuário autenticado.
-        """
         serializer = self.serializer_class(
             data=request.data,
             context={'request': request}
