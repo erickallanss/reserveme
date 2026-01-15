@@ -20,11 +20,11 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'username', 'first_name', 'last_name', 
             'full_name', 'cpf', 'telefone', 'data_nascimento', 
-            'avatar', 'role', 'is_approved', 'email_verified',
+            'avatar', 'role', 'email_verified',
             'is_active', 'created_at', 'updated_at'
         ]
         read_only_fields = [
-            'id', 'is_approved', 'email_verified', 'created_at', 
+            'id', 'email_verified', 'created_at', 
             'updated_at', 'role'
         ]
     
@@ -121,7 +121,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             **validated_data,
             is_active=True,
-            is_approved=False,
             email_verified=False,
             role='customer'
         )

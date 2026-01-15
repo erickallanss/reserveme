@@ -75,12 +75,6 @@ class User(AbstractUser):
         help_text='Papel do usuário no sistema'
     )
     
-    is_approved = models.BooleanField(
-        default=False,
-        verbose_name='Aprovado',
-        help_text='Usuário foi aprovado manualmente por um admin'
-    )
-    
     email_verified = models.BooleanField(
         default=False,
         verbose_name='Email Verificado',
@@ -107,17 +101,9 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username', 'cpf', 'first_name', 'last_name']
     
     class Meta:
-        db_table = 'reserveme_user'
         verbose_name = 'Usuário'
         verbose_name_plural = 'Usuários'
         ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['email']),
-            models.Index(fields=['cpf']),
-            models.Index(fields=['role']),
-            models.Index(fields=['-created_at']),
-            models.Index(fields=['is_approved', 'email_verified']),
-        ]
     
     def __str__(self):
         return f"{self.get_full_name()} ({self.email})"
@@ -127,7 +113,7 @@ class User(AbstractUser):
     
     def can_login(self):
         """Verifica se o usuário pode fazer login."""
-        return self.is_active and self.email_verified and self.is_approved
+        return self.is_active and self.email_verified
     
     @property
     def is_admin(self):
