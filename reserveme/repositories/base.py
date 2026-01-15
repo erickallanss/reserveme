@@ -6,8 +6,6 @@ from typing import Optional, List, TypeVar, Generic
 from django.db.models import Model, QuerySet
 from django.core.exceptions import ObjectDoesNotExist
 
-from reserveme.repositories.protocols import BaseRepositoryProtocol
-
 T = TypeVar('T', bound=Model)
 
 
