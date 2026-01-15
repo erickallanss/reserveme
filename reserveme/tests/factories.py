@@ -4,7 +4,6 @@ Factories para testes usando Factory Boy.
 import factory
 from factory.django import DjangoModelFactory
 from django.contrib.auth import get_user_model
-from reserveme.models import ExampleModel
 
 User = get_user_model()
 
@@ -54,14 +53,3 @@ class ApprovedUserFactory(UserFactory):
     
     is_approved = True
     email_verified = True
-
-
-class ExampleModelFactory(DjangoModelFactory):
-    """Factory para ExampleModel."""
-    
-    class Meta:
-        model = ExampleModel
-    
-    name = factory.Faker('sentence', nb_words=3, locale='pt_BR')
-    description = factory.Faker('text', locale='pt_BR')
-    created_by = factory.SubFactory(UserFactory)
