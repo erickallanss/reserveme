@@ -16,6 +16,7 @@ from core.exceptions import (
     InvalidVerificationTokenError,
 )
 from reserveme.containers import container
+from reserveme.permissions import IsAdmin
 from reserveme.serializers import (
     UserRegisterSerializer,
     UserLoginSerializer,
@@ -23,6 +24,7 @@ from reserveme.serializers import (
     UserUpdateSerializer,
     PasswordChangeSerializer,
     EmailVerificationSerializer,
+    InternalUserRegisterSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -83,44 +85,20 @@ class RegisterAPIView(APIView, AuthMixin):
     )
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        
-        if not serializer.is_valid():
-            logger.warning(
-                "Tentativa de registro com dados inválidos",
-                extra={'errors': serializer.errors, 'ip': request.META.get('REMOTE_ADDR')}
-            )
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
         
         auth_service = container.auth_service()
+        user = auth_service.register_user(serializer.validated_data)
         
-        try:
-            user = auth_service.register_user(serializer.validated_data)
-            
-            logger.info(
-                f"Novo usuário registrado: {user.email}",
-                extra={'user_id': user.id, 'email': user.email}
-            )
-            
-            return Response({
-                'message': 'Usuário registrado com sucesso! Verifique seu email.',
-                'user': UserSerializer(user).data
-            }, status=status.HTTP_201_CREATED)
+        logger.info(
+            f"Novo usuário registrado: {user.email}",
+            extra={'user_id': user.id, 'email': user.email}
+        )
         
-        except ValidationError as e:
-            logger.warning(
-                f"Erro de validação no registro: {str(e)}",
-                extra={'email': serializer.validated_data.get('email')}
-            )
-            raise
-        except Exception as e:
-            logger.error(
-                f"Erro inesperado no registro: {str(e)}",
-                extra={'email': serializer.validated_data.get('email')},
-                exc_info=True
-            )
-            return Response({
-                'error': 'Erro ao registrar usuário. Tente novamente mais tarde.'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({
+            'message': 'Usuário registrado com sucesso! Verifique seu email.',
+            'user': UserSerializer(user).data
+        }, status=status.HTTP_201_CREATED)
 
 
 class LoginAPIView(APIView, AuthMixin):
@@ -138,51 +116,27 @@ class LoginAPIView(APIView, AuthMixin):
     )
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        
-        if not serializer.is_valid():
-            logger.warning(
-                "Tentativa de login com dados inválidos",
-                extra={'errors': serializer.errors, 'ip': request.META.get('REMOTE_ADDR')}
-            )
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
         
         auth_service = container.auth_service()
         email = serializer.validated_data['email']
         
-        try:
-            user, tokens = auth_service.login(
-                email=email,
-                password=serializer.validated_data['password']
-            )
-            
-            logger.info(
-                f"Login realizado com sucesso: {user.email}",
-                extra={'user_id': user.id, 'email': user.email}
-            )
-            
-            response = Response({
-                'message': 'Login realizado com sucesso',
-                'user': UserSerializer(user).data
-            }, status=status.HTTP_200_OK)
-            
-            return self.set_auth_cookies(response, tokens)
+        user, tokens = auth_service.login(
+            email=email,
+            password=serializer.validated_data['password']
+        )
         
-        except (InvalidCredentialsError, EmailNotVerifiedError, 
-                AccountInactiveError) as e:
-            logger.warning(
-                f"Falha no login para {email}: {e.detail}",
-                extra={'email': email, 'error_type': type(e).__name__}
-            )
-            raise
-        except Exception as e:
-            logger.error(
-                f"Erro inesperado no login: {str(e)}",
-                extra={'email': email},
-                exc_info=True
-            )
-            return Response({
-                'error': 'Erro ao realizar login. Tente novamente mais tarde.'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.info(
+            f"Login realizado com sucesso: {user.email}",
+            extra={'user_id': user.id, 'email': user.email}
+        )
+        
+        response = Response({
+            'message': 'Login realizado com sucesso',
+            'user': UserSerializer(user).data
+        }, status=status.HTTP_200_OK)
+        
+        return self.set_auth_cookies(response, tokens)
 
 
 class LogoutAPIView(APIView, AuthMixin):
@@ -277,44 +231,21 @@ class VerifyEmailAPIView(APIView, AuthMixin):
         A conta é ativada automaticamente após a verificação.
         """
         serializer = self.serializer_class(data=request.data)
-        
-        if not serializer.is_valid():
-            logger.warning(
-                "Tentativa de verificação com dados inválidos",
-                extra={'errors': serializer.errors}
-            )
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
         
         auth_service = container.auth_service()
         token = serializer.validated_data['token']
+        user = auth_service.verify_email(token)
         
-        try:
-            user = auth_service.verify_email(token)
-            
-            logger.info(
-                f"Email verificado e conta ativada com sucesso: {user.email}",
-                extra={'user_id': user.id, 'email': user.email, 'email_verified': user.email_verified}
-            )
-            
-            return Response({
-                'message': 'Email verificado com sucesso! Sua conta está ativa e você já pode fazer login.',
-                'user': UserSerializer(user).data
-            }, status=status.HTTP_200_OK)
+        logger.info(
+            f"Email verificado e conta ativada com sucesso: {user.email}",
+            extra={'user_id': user.id, 'email': user.email, 'email_verified': user.email_verified}
+        )
         
-        except InvalidVerificationTokenError as e:
-            logger.warning(
-                f"Tentativa de verificação com token inválido: {e.detail}",
-                extra={'token_prefix': token[:10] if token else None}
-            )
-            raise
-        except Exception as e:
-            logger.error(
-                f"Erro inesperado na verificação de email: {str(e)}",
-                exc_info=True
-            )
-            return Response({
-                'error': 'Erro ao verificar email. Tente novamente mais tarde.'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({
+            'message': 'Email verificado com sucesso! Sua conta está ativa e você já pode fazer login.',
+            'user': UserSerializer(user).data
+        }, status=status.HTTP_200_OK)
 
 
 class UserProfileAPIView(APIView, AuthMixin):
@@ -348,53 +279,57 @@ class UserProfileAPIView(APIView, AuthMixin):
             data=request.data,
             partial=True
         )
-        
-        if not serializer.is_valid():
-            logger.warning(
-                f"Tentativa de atualização com dados inválidos: {request.user.email}",
-                extra={'user_id': request.user.id, 'errors': serializer.errors}
-            )
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
         
         auth_service = container.auth_service()
+        updated_user = auth_service.update_user(
+            user=request.user,
+            data=serializer.validated_data
+        )
         
-        try:
-            updated_user = auth_service.update_user(
-                user=request.user,
-                data=serializer.validated_data
-            )
-            
-            logger.info(
-                f"Perfil atualizado com sucesso: {updated_user.email}",
-                extra={'user_id': updated_user.id, 'updated_fields': list(serializer.validated_data.keys())}
-            )
-            
-            return Response({
-                'message': 'Perfil atualizado com sucesso',
-                'user': UserSerializer(updated_user).data
-            }, status=status.HTTP_200_OK)
+        logger.info(
+            f"Perfil atualizado com sucesso: {updated_user.email}",
+            extra={'user_id': updated_user.id, 'updated_fields': list(serializer.validated_data.keys())}
+        )
         
-        except ValidationError as e:
-            logger.warning(
-                f"Erro de validação na atualização: {request.user.email}",
-                extra={'user_id': request.user.id, 'error': str(e)}
-            )
-            raise
-        except Exception as e:
-            logger.error(
-                f"Erro inesperado na atualização de perfil: {str(e)}",
-                extra={'user_id': request.user.id},
-                exc_info=True
-            )
-            return Response({
-                'error': 'Erro ao atualizar perfil. Tente novamente mais tarde.'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({
+            'message': 'Perfil atualizado com sucesso',
+            'user': UserSerializer(updated_user).data
+        }, status=status.HTTP_200_OK)
+
+
+class InternalRegisterAPIView(APIView):
+    permission_classes = [IsAdmin]
+    serializer_class = InternalUserRegisterSerializer
+    
+    @extend_schema(
+        tags=['Internal'],
+        request=InternalUserRegisterSerializer,
+        responses={
+            201: OpenApiResponse(description='Usuário interno criado com sucesso'),
+            400: OpenApiResponse(description='Dados inválidos'),
+            403: OpenApiResponse(description='Sem permissão'),
+        }
+    )
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        auth_service = container.auth_service()
+        user = auth_service.register_internal_user(serializer.validated_data)
+        
+        logger.info(
+            f"Usuário interno criado: {user.email} (role: {user.role})",
+            extra={'user_id': user.id, 'role': user.role, 'created_by': request.user.id}
+        )
+        
+        return Response({
+            'message': 'Usuário interno criado com sucesso.',
+            'user': UserSerializer(user).data
+        }, status=status.HTTP_201_CREATED)
 
 
 class ChangePasswordAPIView(APIView, AuthMixin):
-    """
-    API para alteração de senha.
-    """
     permission_classes = [IsAuthenticated]
     serializer_class = PasswordChangeSerializer
     
@@ -411,44 +346,20 @@ class ChangePasswordAPIView(APIView, AuthMixin):
             data=request.data,
             context={'request': request}
         )
-        
-        if not serializer.is_valid():
-            logger.warning(
-                f"Tentativa de alteração de senha com dados inválidos: {request.user.email}",
-                extra={'user_id': request.user.id, 'errors': serializer.errors}
-            )
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
         
         auth_service = container.auth_service()
+        auth_service.change_password(
+            user=request.user,
+            old_password=serializer.validated_data['old_password'],
+            new_password=serializer.validated_data['new_password']
+        )
         
-        try:
-            auth_service.change_password(
-                user=request.user,
-                old_password=serializer.validated_data['old_password'],
-                new_password=serializer.validated_data['new_password']
-            )
-            
-            logger.info(
-                f"Senha alterada com sucesso: {request.user.email}",
-                extra={'user_id': request.user.id}
-            )
-            
-            return Response({
-                'message': 'Senha alterada com sucesso'
-            }, status=status.HTTP_200_OK)
+        logger.info(
+            f"Senha alterada com sucesso: {request.user.email}",
+            extra={'user_id': request.user.id}
+        )
         
-        except ValidationError as e:
-            logger.warning(
-                f"Erro ao alterar senha: {request.user.email}",
-                extra={'user_id': request.user.id, 'error': str(e)}
-            )
-            raise
-        except Exception as e:
-            logger.error(
-                f"Erro inesperado ao alterar senha: {str(e)}",
-                extra={'user_id': request.user.id},
-                exc_info=True
-            )
-            return Response({
-                'error': 'Erro ao alterar senha. Tente novamente mais tarde.'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({
+            'message': 'Senha alterada com sucesso'
+        }, status=status.HTTP_200_OK)

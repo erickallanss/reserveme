@@ -190,3 +190,74 @@ class EmailVerificationSerializer(serializers.Serializer):
     """Serializer para verificação de email."""
     
     token = serializers.CharField(required=True)
+
+
+class InternalUserRegisterSerializer(serializers.ModelSerializer):
+    """Serializer para registro de usuários internos (admin/staff)."""
+    
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={'input_type': 'password'}
+    )
+    password_confirm = serializers.CharField(
+        write_only=True,
+        required=True,
+        style={'input_type': 'password'}
+    )
+    
+    class Meta:
+        model = User
+        fields = [
+            'email', 'username', 'password', 'password_confirm',
+            'first_name', 'last_name', 'cpf', 'telefone', 
+            'data_nascimento', 'role'
+        ]
+    
+    def validate_email(self, value):
+        if User.objects.filter(email=value.lower()).exists():
+            raise serializers.ValidationError("Este email já está cadastrado.")
+        return value.lower()
+    
+    def validate_username(self, value):
+        if User.objects.filter(username=value.lower()).exists():
+            raise serializers.ValidationError("Este nome de usuário já está em uso.")
+        return value.lower()
+    
+    def validate_cpf(self, value):
+        if not re.match(r'^\d{3}\.\d{3}\.\d{3}-\d{2}$', value):
+            raise serializers.ValidationError("CPF deve estar no formato: 999.999.999-99")
+        
+        if User.objects.filter(cpf=value).exists():
+            raise serializers.ValidationError("Este CPF já está cadastrado.")
+        
+        return value
+    
+    def validate_telefone(self, value):
+        if value and not re.match(r'^\(\d{2}\)\s\d{4,5}-\d{4}$', value):
+            raise serializers.ValidationError("Telefone deve estar no formato: (99) 99999-9999")
+        return value
+    
+    def validate_role(self, value):
+        if value not in ['admin', 'staff']:
+            raise serializers.ValidationError("Role deve ser 'admin' ou 'staff'.")
+        return value
+    
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError({
+                'password_confirm': 'As senhas não coincidem.'
+            })
+        
+        password = attrs.get('password')
+        user = User(**{
+            k: v for k, v in attrs.items() 
+            if k not in ['password', 'password_confirm']
+        })
+        
+        try:
+            validate_password(password, user)
+        except django_exceptions.ValidationError as e:
+            raise serializers.ValidationError({'password': list(e.messages)})
+        
+        return attrs

@@ -64,6 +64,26 @@ class AuthService:
         
         return user
     
+    def register_internal_user(self, data: Dict[str, Any]) -> User:
+        """
+        Registra usuário interno (admin/staff) sem necessidade de verificação de email.
+        """
+        user_data = data.copy()
+        password = user_data.pop('password', None)
+        user_data.pop('password_confirm', None)
+        
+        user = self.repository.create(
+            **user_data,
+            is_active=True,
+            email_verified=True
+        )
+        
+        if password:
+            user.set_password(password)
+            user.save(update_fields=['password'])
+        
+        return user
+    
     def login(self, email: str, password: str) -> Tuple[User, Dict[str, str]]:
         """
         Autentica usuário e retorna tokens.

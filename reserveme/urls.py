@@ -10,6 +10,7 @@ from reserveme.views.auth_views import (
     VerifyEmailAPIView,
     UserProfileAPIView,
     ChangePasswordAPIView,
+    InternalRegisterAPIView,
 )
 
 urlpatterns = [
@@ -20,4 +21,5 @@ urlpatterns = [
     path('auth/verify-email/', VerifyEmailAPIView.as_view(), name='auth-verify-email'),
     path('auth/me/', UserProfileAPIView.as_view(), name='auth-me'),
     path('auth/change-password/', ChangePasswordAPIView.as_view(), name='auth-change-password'),
+    path('internal/register/', InternalRegisterAPIView.as_view(), name='internal-register'),
 ]
