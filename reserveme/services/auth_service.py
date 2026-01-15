@@ -34,12 +34,14 @@ class AuthService:
         Raises:
             ValidationError: Se dados inválidos
         """
-        # Gerar token de verificação
+        user_data = data.copy()
+        password = user_data.pop('password', None)
+        user_data.pop('password_confirm', None)
+        
         verification_token = get_random_string(64)
         
-        # Criar usuário
         user = self.repository.create(
-            **data,
+            **user_data,
             email_verification_token=verification_token,
             is_active=True,
             is_approved=False,
@@ -47,7 +49,10 @@ class AuthService:
             role='customer'
         )
         
-        # Enviar email de verificação (assíncrono)
+        if password:
+            user.set_password(password)
+            user.save(update_fields=['password'])
+        
         self._send_verification_email(user, verification_token)
         
         return user

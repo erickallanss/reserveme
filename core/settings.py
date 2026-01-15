@@ -187,8 +187,8 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '10/minute',  # Não autenticados
         'user': '20/minute',  # Autenticados
-        'auth_login': '5/15min',  # Login específico
-        'auth_register': '3/hour',  # Registro específico
+        'auth_login': '5/15m',  # Login específico: 5 requests a cada 15 minutos
+        'auth_register': '3/hour',  # Registro específico: 3 requests por hora
     },
 }
 

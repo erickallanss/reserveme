@@ -122,7 +122,7 @@ class TestUserRepository:
         """Testa atualização de usuário."""
         user = UserFactory()
         
-        updated = user_repository.update(user.id, first_name='Updated')
+        updated = user_repository.update(user, first_name='Updated')
         
         assert updated.first_name == 'Updated'
         assert updated.email == user.email
@@ -132,9 +132,8 @@ class TestUserRepository:
         user = UserFactory()
         user_id = user.id
         
-        deleted = user_repository.delete(user_id)
+        user_repository.delete(user)
         
-        assert deleted is True
         assert user_repository.get_by_id(user_id) is None
     
     def test_get_pending_approval(self, user_repository):

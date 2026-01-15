@@ -65,3 +65,9 @@ class BaseRepository(Generic[T]):
             return self.model.objects.get(**kwargs)
         except ObjectDoesNotExist:
             return None
+    
+    def list(self, **filters) -> list[T]:
+        """Lista registros como uma lista Python."""
+        if filters:
+            return list(self.filter(**filters))
+        return list(self.get_queryset())

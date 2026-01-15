@@ -100,13 +100,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     
     def validate(self, attrs):
         """Validações gerais."""
-        # Validar se as senhas coincidem
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({
                 'password_confirm': 'As senhas não coincidem.'
             })
         
-        # Validar força da senha usando validadores do Django
         password = attrs.get('password')
         user = User(**{
             k: v for k, v in attrs.items() 
@@ -117,6 +115,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             validate_password(password, user)
         except django_exceptions.ValidationError as e:
             raise serializers.ValidationError({'password': list(e.messages)})
+        
+        attrs.pop('password_confirm', None)
         
         return attrs
     
