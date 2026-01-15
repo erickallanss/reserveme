@@ -1,22 +1,142 @@
-{% extends "emails/base.html" %}
-
-{% block content %}
-    <h2>Olá, {{ user_name }}!</h2>
-    
-    <p>Bem-vindo ao <strong>ReserveMe</strong>! 🎉</p>
-    
-    <p>Obrigado por se cadastrar. Para ativar sua conta, por favor verifique seu endereço de email clicando no botão abaixo:</p>
-    
-    <div style="text-align: center;">
-        <a href="{{ verification_link }}" class="btn">✅ Verificar Email</a>
-    </div>
-    
-    <p>Ou copie e cole este link no seu navegador:</p>
-    <p style="word-break: break-all; color: #667eea;">{{ verification_link }}</p>
-    
-    <p><strong>Importante:</strong> Após verificar seu email, sua conta será analisada por nossa equipe antes de ser aprovada.</p>
-    
-    <p>Se você não se cadastrou no ReserveMe, por favor ignore este email.</p>
-    
-    <p>Atenciosamente,<br>Equipe ReserveMe</p>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação de Email - ReserveMe</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background: #ffffff; border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;">
+                    
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 50px 40px; text-align: center;">
+                            <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; backdrop-filter: blur(10px);">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" fill="white"/>
+                                </svg>
+                            </div>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">Confirme seu Email</h1>
+                            <p style="margin: 15px 0 0 0; color: rgba(255,255,255,0.95); font-size: 16px; line-height: 1.5;">Estamos quase lá! Verifique sua conta para começar</p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td style="padding: 50px 40px;">
+                            <p style="margin: 0 0 10px 0; color: #1a1a1a; font-size: 18px; font-weight: 600;">Olá, {{ user_name }}!</p>
+                            
+                            <p style="margin: 0 0 30px 0; color: #4a5568; font-size: 15px; line-height: 1.7;">
+                                Obrigado por se cadastrar no <strong style="color: #667eea;">ReserveMe</strong>. Para garantir a segurança da sua conta e começar a fazer suas reservas, precisamos que você confirme seu endereço de email.
+                            </p>
+                            
+                            <div style="background: linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%); border-radius: 16px; padding: 25px; margin-bottom: 30px; border-left: 4px solid #667eea;">
+                                <p style="margin: 0 0 8px 0; color: #667eea; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Próximo passo</p>
+                                <p style="margin: 0; color: #2d3748; font-size: 14px; line-height: 1.6;">
+                                    Clique no botão abaixo para verificar seu email. Este link é válido por 24 horas.
+                                </p>
+                            </div>
+                            
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center" style="padding: 10px 0 30px 0;">
+                                        <a href="{{ verification_link }}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 18px 50px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4); transition: all 0.3s ease;">
+                                            Verificar Meu Email
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <div style="background: #fff9e6; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid #ffd666;">
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td width="30" valign="top">
+                                            <div style="width: 24px; height: 24px; background: #ffd666; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                                <span style="color: #8b6914; font-size: 16px; font-weight: bold;">!</span>
+                                            </div>
+                                        </td>
+                                        <td style="padding-left: 15px;">
+                                            <p style="margin: 0 0 8px 0; color: #8b6914; font-size: 13px; font-weight: 600;">Não consegue clicar no botão?</p>
+                                            <p style="margin: 0; color: #8b6914; font-size: 12px; line-height: 1.5;">
+                                                Copie e cole este link no seu navegador:<br>
+                                                <a href="{{ verification_link }}" style="color: #667eea; word-break: break-all; text-decoration: underline;">{{ verification_link }}</a>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            
+                            <div style="border-top: 2px solid #e2e8f0; padding-top: 30px; margin-top: 10px;">
+                                <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 14px; line-height: 1.6;">
+                                    <strong>O que acontece depois?</strong>
+                                </p>
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td width="40" valign="top">
+                                            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">1</div>
+                                        </td>
+                                        <td style="padding-left: 15px; padding-bottom: 15px;">
+                                            <p style="margin: 0; color: #2d3748; font-size: 14px; line-height: 1.5;">
+                                                <strong>Aprovação do Admin</strong><br>
+                                                <span style="color: #718096;">Sua conta será revisada por nossa equipe</span>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td width="40" valign="top">
+                                            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">2</div>
+                                        </td>
+                                        <td style="padding-left: 15px; padding-bottom: 15px;">
+                                            <p style="margin: 0; color: #2d3748; font-size: 14px; line-height: 1.5;">
+                                                <strong>Notificação de Aprovação</strong><br>
+                                                <span style="color: #718096;">Você receberá um email quando for aprovado</span>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td width="40" valign="top">
+                                            <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">3</div>
+                                        </td>
+                                        <td style="padding-left: 15px;">
+                                            <p style="margin: 0; color: #2d3748; font-size: 14px; line-height: 1.5;">
+                                                <strong>Comece a Reservar</strong><br>
+                                                <span style="color: #718096;">Acesso completo a todas as funcionalidades</span>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <td style="background: #f7fafc; padding: 35px 40px; border-top: 1px solid #e2e8f0;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td align="center" style="padding-bottom: 20px;">
+                                        <p style="margin: 0 0 5px 0; color: #1a1a1a; font-size: 20px; font-weight: 700;">ReserveMe</p>
+                                        <p style="margin: 0; color: #718096; font-size: 13px;">Seu sistema de reservas inteligente</p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                                        <p style="margin: 0 0 10px 0; color: #a0aec0; font-size: 12px; line-height: 1.6;">
+                                            Este email foi enviado para você porque uma conta foi criada no ReserveMe.<br>
+                                            Se você não se cadastrou, ignore este email.
+                                        </p>
+                                        <p style="margin: 0; color: #cbd5e0; font-size: 11px;">
+                                            &copy; 2026 ReserveMe. Todos os direitos reservados.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
