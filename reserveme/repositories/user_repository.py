@@ -44,14 +44,6 @@ class UserRepository(BaseRepository[User]):
         """Verifica se CPF já existe."""
         return self.model.objects.filter(cpf=cpf).exists()
     
-    def get_pending_approval(self):
-        """Lista usuários pendentes de aprovação."""
-        return self.filter(
-            email_verified=True,
-            is_approved=False,
-            is_active=True
-        )
-    
     def get_by_role(self, role: str):
         """Lista usuários por role."""
         return self.filter(role=role, is_active=True)
