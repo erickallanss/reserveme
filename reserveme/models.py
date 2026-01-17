@@ -122,3 +122,89 @@ class User(AbstractUser):
     def is_customer(self):
         """Verifica se o usuário é cliente."""
         return self.role == 'customer'
+
+
+class Hotel(models.Model):
+    """
+    Modelo para representar um Hotel no sistema.
+    """
+    
+    nome = models.CharField(
+        max_length=200,
+        unique=True,
+        verbose_name='Nome do Hotel'
+    )
+    
+    descricao = models.TextField(
+        blank=True,
+        verbose_name='Descrição',
+        help_text='Descrição detalhada do hotel'
+    )
+    
+    logo = models.ImageField(
+        upload_to='hotels/logos/%Y/%m/',
+        null=True,
+        blank=True,
+        verbose_name='Logo',
+        help_text='Logo do hotel'
+    )
+    
+    endereco = models.CharField(
+        max_length=500,
+        verbose_name='Endereço',
+        help_text='Endereço completo do hotel'
+    )
+    
+    telefone = models.CharField(
+        max_length=20,
+        validators=[
+            RegexValidator(
+                regex=r'^\(\d{2}\)\s\d{4,5}-\d{4}$',
+                message='Telefone deve estar no formato: (99) 99999-9999',
+            )
+        ],
+        verbose_name='Telefone',
+        help_text='Formato: (99) 99999-9999'
+    )
+    
+    email = models.EmailField(
+        verbose_name='Email',
+        help_text='Email de contato do hotel'
+    )
+    
+    horario_checkin = models.TimeField(
+        verbose_name='Horário de Check-in',
+        help_text='Horário padrão para check-in'
+    )
+    
+    horario_checkout = models.TimeField(
+        verbose_name='Horário de Check-out',
+        help_text='Horário padrão para check-out'
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name='Ativo',
+        help_text='Hotel está ativo no sistema'
+    )
+    
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Criado em'
+    )
+    
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Atualizado em'
+    )
+    
+    class Meta:
+        verbose_name = 'Hotel'
+        verbose_name_plural = 'Hotéis'
+        ordering = ['nome']
+    
+    def __str__(self):
+        return self.nome
+    
+    def __repr__(self):
+        return f'<Hotel: {self.nome}>'
