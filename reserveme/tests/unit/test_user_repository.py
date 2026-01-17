@@ -27,7 +27,7 @@ class TestUserRepository:
             'password': 'TestPass123!@#',
             'first_name': 'Test',
             'last_name': 'User',
-            'cpf': '111.444.777-35',
+            'cpf': '11144477735',
         }
         
         user = user_repository.create(**user_data)
@@ -76,9 +76,9 @@ class TestUserRepository:
     
     def test_get_by_cpf(self, user_repository):
         """Testa busca por CPF."""
-        created_user = UserFactory(cpf='111.444.777-35')
+        created_user = UserFactory(cpf='11144477735')
         
-        user = user_repository.get_by_cpf('111.444.777-35')
+        user = user_repository.get_by_cpf('11144477735')
         
         assert user is not None
         assert user.cpf == created_user.cpf
@@ -111,7 +111,7 @@ class TestUserRepository:
     
     def test_cpf_exists(self, user_repository):
         """Testa verificação de existência de CPF."""
-        cpf = '111.444.777-35'
+        cpf = '11144477735'
         assert not user_repository.cpf_exists(cpf)
         
         UserFactory(cpf=cpf)

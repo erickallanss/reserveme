@@ -45,6 +45,29 @@ def validate_cpf(cpf: str) -> bool:
     return True
 
 
+def format_cpf(cpf: str) -> str:
+    """
+    Formata CPF para o padrão brasileiro (111.444.777-35).
+    
+    Args:
+        cpf: String contendo apenas números (11 dígitos)
+        
+    Returns:
+        CPF formatado com . e -
+    """
+    if not cpf:
+        return cpf
+    
+    # Remove caracteres não numéricos
+    cpf_clean = ''.join(filter(str.isdigit, cpf))
+    
+    if len(cpf_clean) != 11:
+        return cpf
+    
+    # Formato: 111.444.777-35
+    return f"{cpf_clean[:3]}.{cpf_clean[3:6]}.{cpf_clean[6:9]}-{cpf_clean[9:]}"
+
+
 def send_email_async(
     subject: str,
     message: str,

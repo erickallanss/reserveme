@@ -28,7 +28,7 @@ class User(AbstractUser):
     )
     
     cpf = models.CharField(
-        max_length=14,
+        max_length=11,
         unique=True,
         verbose_name='CPF'
     )

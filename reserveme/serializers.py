@@ -5,7 +5,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions
-from core.utils.helpers import validate_cpf
+from core.utils.helpers import validate_cpf, format_cpf
 import re
 
 User = get_user_model()
@@ -15,6 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
     """Serializer para leitura de usuário."""
     
     full_name = serializers.SerializerMethodField()
+    cpf = serializers.SerializerMethodField()
     
     class Meta:
         model = User
@@ -31,6 +32,9 @@ class UserSerializer(serializers.ModelSerializer):
     
     def get_full_name(self, obj):
         return obj.get_full_name()
+    
+    def get_cpf(self, obj):
+        return format_cpf(obj.cpf) if obj.cpf else None
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -46,6 +50,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         required=True,
         style={'input_type': 'password'}
     )
+    cpf = serializers.CharField(required=True, max_length=14)
     
     class Meta:
         model = User
@@ -209,6 +214,7 @@ class InternalUserRegisterSerializer(serializers.ModelSerializer):
         required=True,
         style={'input_type': 'password'}
     )
+    cpf = serializers.CharField(required=True, max_length=14)
     
     class Meta:
         model = User
