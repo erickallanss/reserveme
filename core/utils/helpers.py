@@ -1,9 +1,48 @@
 """
-Helper functions para facilitar o uso das tasks de email
+Funções auxiliares do projeto.
 """
 from typing import List, Optional, Dict, Any
 from celery.result import AsyncResult
 from .tasks import send_email_task, send_template_email_task, send_mass_email_task
+
+
+def validate_cpf(cpf: str) -> bool:
+    """
+    Valida CPF usando algoritmo de dígitos verificadores.
+    Remove automaticamente caracteres especiais antes da validação.
+    
+    Args:
+        cpf: String contendo CPF (aceita com ou sem máscara)
+        
+    Returns:
+        True se CPF válido, False caso contrário
+    """
+    if not cpf:
+        return False
+    
+    # Remove todos os caracteres não numéricos
+    cpf_clean = ''.join(filter(str.isdigit, cpf))
+    
+    if not cpf_clean or len(cpf_clean) != 11:
+        return False
+    
+    if cpf_clean == cpf_clean[0] * 11:
+        return False
+    
+    def calculate_digit(cpf_partial: str, weight: int) -> int:
+        total = sum(int(cpf_partial[i]) * (weight - i) for i in range(len(cpf_partial)))
+        remainder = total % 11
+        return 0 if remainder < 2 else 11 - remainder
+    
+    first_digit = calculate_digit(cpf_clean[:9], 10)
+    if first_digit != int(cpf_clean[9]):
+        return False
+    
+    second_digit = calculate_digit(cpf_clean[:10], 11)
+    if second_digit != int(cpf_clean[10]):
+        return False
+    
+    return True
 
 
 def send_email_async(
