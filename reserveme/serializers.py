@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions
 from core.utils.helpers import validate_cpf, format_cpf
+from reserveme.models import Hotel
 import re
 
 User = get_user_model()
@@ -279,3 +280,104 @@ class InternalUserRegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'password': list(e.messages)})
         
         return attrs
+
+
+
+# Hotel Serializers
+class HotelSerializer(serializers.ModelSerializer):
+    """Serializer para leitura e escrita de Hotel."""
+    
+    class Meta:
+        model = Hotel
+        fields = [
+            'id', 'nome', 'descricao', 'logo', 'endereco', 
+            'telefone', 'email', 'horario_checkin', 'horario_checkout',
+            'is_active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def validate_telefone(self, value):
+        """Valida formato do telefone."""
+        if value and not re.match(r'^\(\d{2}\)\s\d{4,5}-\d{4}$', value):
+            raise serializers.ValidationError(
+                'Telefone deve estar no formato: (99) 99999-9999'
+            )
+        return value
+    
+    def validate_nome(self, value):
+        """Valida unicidade do nome (case insensitive)."""
+        instance_id = self.instance.id if self.instance else None
+        
+        queryset = Hotel.objects.filter(nome__iexact=value)
+        if instance_id:
+            queryset = queryset.exclude(id=instance_id)
+        
+        if queryset.exists():
+            raise serializers.ValidationError('Já existe um hotel com este nome.')
+        
+        return value
+    
+    def validate_email(self, value):
+        """Valida unicidade do email (case insensitive)."""
+        instance_id = self.instance.id if self.instance else None
+        
+        queryset = Hotel.objects.filter(email__iexact=value)
+        if instance_id:
+            queryset = queryset.exclude(id=instance_id)
+        
+        if queryset.exists():
+            raise serializers.ValidationError('Já existe um hotel com este email.')
+        
+        return value.lower()
+
+
+class HotelCreateSerializer(serializers.ModelSerializer):
+    """Serializer para criação de Hotel."""
+    
+    class Meta:
+        model = Hotel
+        fields = [
+            'nome', 'descricao', 'logo', 'endereco', 
+            'telefone', 'email', 'horario_checkin', 'horario_checkout'
+        ]
+    
+    def validate_telefone(self, value):
+        """Valida formato do telefone."""
+        if value and not re.match(r'^\(\d{2}\)\s\d{4,5}-\d{4}$', value):
+            raise serializers.ValidationError(
+                'Telefone deve estar no formato: (99) 99999-9999'
+            )
+        return value
+    
+    def validate_nome(self, value):
+        """Valida unicidade do nome."""
+        if Hotel.objects.filter(nome__iexact=value).exists():
+            raise serializers.ValidationError('Já existe um hotel com este nome.')
+        return value
+    
+    def validate_email(self, value):
+        """Valida unicidade do email."""
+        if Hotel.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError('Já existe um hotel com este email.')
+        return value.lower()
+
+
+class HotelUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para atualização de Hotel."""
+    
+    class Meta:
+        model = Hotel
+        fields = [
+            'nome', 'descricao', 'logo', 'endereco', 
+            'telefone', 'email', 'horario_checkin', 'horario_checkout',
+            'is_active'
+        ]
+    
+    def validate_telefone(self, value):
+        """Valida formato do telefone."""
+        if value and not re.match(r'^\(\d{2}\)\s\d{4,5}-\d{4}$', value):
+            raise serializers.ValidationError(
+                'Telefone deve estar no formato: (99) 99999-9999'
+            )
+        return value
+
