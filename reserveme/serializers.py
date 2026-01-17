@@ -5,6 +5,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions
+from core.utils.helpers import validate_cpf
 import re
 
 User = get_user_model()
@@ -70,18 +71,21 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return value.lower()
     
     def validate_cpf(self, value):
-        """Valida formato e unicidade do CPF."""
-        if not re.match(r'^\d{3}\.\d{3}\.\d{3}-\d{2}$', value):
-            raise serializers.ValidationError(
-                "CPF deve estar no formato: 999.999.999-99"
-            )
+        if not value:
+            raise serializers.ValidationError("CPF é obrigatório.")
         
-        if User.objects.filter(cpf=value).exists():
-            raise serializers.ValidationError(
-                "Este CPF já está cadastrado."
-            )
+        cpf_clean = ''.join(filter(str.isdigit, value))
         
-        return value
+        if not cpf_clean or len(cpf_clean) != 11:
+            raise serializers.ValidationError("CPF deve conter 11 dígitos.")
+        
+        if not validate_cpf(cpf_clean):
+            raise serializers.ValidationError("CPF inválido.")
+        
+        if User.objects.filter(cpf=cpf_clean).exists():
+            raise serializers.ValidationError("Este CPF já está cadastrado.")
+        
+        return cpf_clean
     
     def validate_telefone(self, value):
         """Valida formato do telefone."""
@@ -225,13 +229,21 @@ class InternalUserRegisterSerializer(serializers.ModelSerializer):
         return value.lower()
     
     def validate_cpf(self, value):
-        if not re.match(r'^\d{3}\.\d{3}\.\d{3}-\d{2}$', value):
-            raise serializers.ValidationError("CPF deve estar no formato: 999.999.999-99")
+        if not value:
+            raise serializers.ValidationError("CPF é obrigatório.")
         
-        if User.objects.filter(cpf=value).exists():
+        cpf_clean = ''.join(filter(str.isdigit, value))
+        
+        if not cpf_clean or len(cpf_clean) != 11:
+            raise serializers.ValidationError("CPF deve conter 11 dígitos.")
+        
+        if not validate_cpf(cpf_clean):
+            raise serializers.ValidationError("CPF inválido.")
+        
+        if User.objects.filter(cpf=cpf_clean).exists():
             raise serializers.ValidationError("Este CPF já está cadastrado.")
         
-        return value
+        return cpf_clean
     
     def validate_telefone(self, value):
         if value and not re.match(r'^\(\d{2}\)\s\d{4,5}-\d{4}$', value):
