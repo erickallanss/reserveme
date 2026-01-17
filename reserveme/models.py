@@ -30,14 +30,7 @@ class User(AbstractUser):
     cpf = models.CharField(
         max_length=14,
         unique=True,
-        validators=[
-            RegexValidator(
-                regex=r'^\d{3}\.\d{3}\.\d{3}-\d{2}$',
-                message='CPF deve estar no formato: 999.999.999-99',
-            )
-        ],
-        verbose_name='CPF',
-        help_text='Formato: 999.999.999-99'
+        verbose_name='CPF'
     )
     
     telefone = models.CharField(
