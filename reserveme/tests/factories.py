@@ -21,7 +21,7 @@ class UserFactory(DjangoModelFactory):
     first_name = factory.Faker('first_name', locale='pt_BR')
     last_name = factory.Faker('last_name', locale='pt_BR')
     password = factory.PostGenerationMethodCall('set_password', 'TestPass123!@#')
-    cpf = factory.Sequence(lambda n: f'{n:011d}'[:3] + '.' + f'{n:011d}'[3:6] + '.' + f'{n:011d}'[6:9] + '-' + f'{n:011d}'[9:11])
+    cpf = factory.Sequence(lambda n: f'{n+10000000000:011d}')
     telefone = factory.LazyAttribute(lambda o: f'(11) 9{factory.Faker("random_int", min=1000, max=9999).evaluate(None, None, {"locale": None})}-{factory.Faker("random_int", min=1000, max=9999).evaluate(None, None, {"locale": None})}')
     
     is_active = True

@@ -40,7 +40,7 @@ class TestRegisterAPI:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'New',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
         }
         
         response = api_client.post(url, data, format='json')
@@ -66,7 +66,7 @@ class TestRegisterAPI:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'New',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
         }
         
         response = api_client.post(url, data, format='json')
@@ -84,7 +84,7 @@ class TestRegisterAPI:
             'password_confirm': 'DifferentPass123!@#',
             'first_name': 'Test',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
         }
         
         response = api_client.post(url, data, format='json')
@@ -93,7 +93,6 @@ class TestRegisterAPI:
         assert 'password_confirm' in response.data
     
     def test_register_invalid_cpf_format(self, api_client):
-        """Testa registro com CPF em formato inválido."""
         url = reverse('auth-register')
         data = {
             'email': 'test@example.com',
@@ -102,7 +101,7 @@ class TestRegisterAPI:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'Test',
             'last_name': 'User',
-            'cpf': '12345678900',  # Formato errado
+            'cpf': '12345678901',
         }
         
         response = api_client.post(url, data, format='json')

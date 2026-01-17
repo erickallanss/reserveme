@@ -36,7 +36,7 @@ class TestUserRegisterSerializer:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'Test',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
         }
         serializer = UserRegisterSerializer(data=data)
         assert serializer.is_valid()
@@ -51,14 +51,13 @@ class TestUserRegisterSerializer:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'Test',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '11144477735',
         }
         serializer = UserRegisterSerializer(data=data)
         assert serializer.is_valid()
         assert serializer.validated_data['username'] == 'testuser'
     
     def test_validate_cpf_invalid_format(self):
-        """Testa validação de CPF com formato inválido."""
         data = {
             'email': 'test@example.com',
             'username': 'testuser',
@@ -66,7 +65,7 @@ class TestUserRegisterSerializer:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'Test',
             'last_name': 'User',
-            'cpf': '12345678900',
+            'cpf': '12345678901',
         }
         serializer = UserRegisterSerializer(data=data)
         assert not serializer.is_valid()
@@ -81,7 +80,7 @@ class TestUserRegisterSerializer:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'Test',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
             'telefone': '11999999999',
         }
         serializer = UserRegisterSerializer(data=data)
@@ -97,7 +96,7 @@ class TestUserRegisterSerializer:
             'password_confirm': '123',
             'first_name': 'Test',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
         }
         serializer = UserRegisterSerializer(data=data)
         assert not serializer.is_valid()

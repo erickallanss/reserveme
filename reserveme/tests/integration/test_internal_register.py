@@ -34,7 +34,7 @@ class TestInternalRegisterAPI:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'Staff',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
             'role': 'staff'
         }
         
@@ -60,7 +60,7 @@ class TestInternalRegisterAPI:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'New',
             'last_name': 'Admin',
-            'cpf': '987.654.321-00',
+            'cpf': '529.982.247-25',
             'role': 'admin'
         }
         
@@ -81,7 +81,7 @@ class TestInternalRegisterAPI:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'Staff',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
             'role': 'staff'
         }
         
@@ -98,7 +98,7 @@ class TestInternalRegisterAPI:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'Staff',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
             'role': 'staff'
         }
         
@@ -116,7 +116,7 @@ class TestInternalRegisterAPI:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'Customer',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
             'role': 'customer'
         }
         
@@ -135,7 +135,7 @@ class TestInternalRegisterAPI:
             'password_confirm': 'DifferentPass123!@#',
             'first_name': 'Staff',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
             'role': 'staff'
         }
         
@@ -156,7 +156,7 @@ class TestInternalRegisterAPI:
             'password_confirm': 'TestPass123!@#',
             'first_name': 'Staff',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
             'role': 'staff'
         }
         

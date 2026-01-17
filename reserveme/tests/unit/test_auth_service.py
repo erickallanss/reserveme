@@ -42,7 +42,7 @@ class TestAuthService:
             'username': 'newuser',
             'first_name': 'New',
             'last_name': 'User',
-            'cpf': '123.456.789-00',
+            'cpf': '111.444.777-35',
         }
         
         created_user = UserFactory.build(**user_data)
