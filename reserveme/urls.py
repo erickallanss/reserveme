@@ -12,6 +12,10 @@ from reserveme.views.auth_views import (
     ChangePasswordAPIView,
     InternalRegisterAPIView,
 )
+from reserveme.views.hotel_views import (
+    HotelListCreateAPIView,
+    HotelDetailAPIView
+)
 
 urlpatterns = [
     path('auth/register/', RegisterAPIView.as_view(), name='auth-register'),
@@ -22,4 +26,8 @@ urlpatterns = [
     path('auth/me/', UserProfileAPIView.as_view(), name='auth-me'),
     path('auth/change-password/', ChangePasswordAPIView.as_view(), name='auth-change-password'),
     path('internal/register/', InternalRegisterAPIView.as_view(), name='internal-register'),
+    
+    # Hotel routes
+    path('hotels/', HotelListCreateAPIView.as_view(), name='hotel-list-create'),
+    path('hotels/<int:hotel_id>/', HotelDetailAPIView.as_view(), name='hotel-detail'),
 ]
