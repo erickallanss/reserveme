@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "reserveme-auth-api",
 		"name": "ReserveMe API",
-		"description": "Collection completa da API ReserveMe com autenticação JWT via cookies HTTP-only",
+		"description": "Collection completa da API ReserveMe com autenticação JWT via cookies HTTP-only e gerenciamento de hotéis",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -416,6 +416,922 @@
 				}
 			],
 			"description": "Endpoints de autenticação com JWT via cookies HTTP-only"
+		},
+		{
+			"name": "Internal Management",
+			"item": [
+				{
+					"name": "Register Internal User (Admin/Staff)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response has user data', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('user');",
+									"    pm.expect(jsonData.user).to.have.property('email');",
+									"    pm.expect(jsonData.user).to.have.property('role');",
+									"    pm.expect(['admin', 'staff']).to.include(jsonData.user.role);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@example.com\",\n    \"username\": \"adminuser\",\n    \"password\": \"AdminPass123!@#\",\n    \"password_confirm\": \"AdminPass123!@#\",\n    \"first_name\": \"Admin\",\n    \"last_name\": \"User\",\n    \"cpf\": \"987.654.321-00\",\n    \"telefone\": \"(11) 98765-4321\",\n    \"data_nascimento\": \"1985-05-20\",\n    \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/internal/register/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"internal",
+								"register",
+								""
+							]
+						},
+						"description": "Registra usuário interno (admin ou staff). Requer autenticação de admin. O usuário é criado já verificado."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gerenciamento interno (apenas admins)"
+		},
+		{
+			"name": "Hotels",
+			"item": [
+				{
+					"name": "List Hotels",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has hotels array', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('hotels');",
+									"    pm.expect(jsonData.hotels).to.be.an('array');",
+									"    pm.expect(jsonData).to.have.property('count');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/hotels/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"hotels",
+								""
+							]
+						},
+						"description": "Lista todos os hotéis. Para usuários não autenticados, retorna apenas hotéis ativos. Para admins, retorna todos."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Hotel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response has hotel data', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('hotel');",
+									"    pm.expect(jsonData.hotel).to.have.property('id');",
+									"    pm.expect(jsonData.hotel).to.have.property('nome');",
+									"});",
+									"",
+									"// Salvar hotel_id para testes futuros",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('hotel_id', jsonData.hotel.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nome\": \"Hotel Paradise\",\n    \"descricao\": \"Um hotel maravilhoso à beira-mar com vista espetacular e serviços de primeira classe.\",\n    \"endereco\": \"Av. Atlântica, 1500 - Copacabana, Rio de Janeiro - RJ, 22021-000\",\n    \"telefone\": \"(21) 98765-4321\",\n    \"email\": \"contato@hotelparadise.com\",\n    \"horario_checkin\": \"14:00:00\",\n    \"horario_checkout\": \"12:00:00\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/hotels/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"hotels",
+								""
+							]
+						},
+						"description": "Cria um novo hotel. Requer autenticação de admin."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Hotel Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has hotel data', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('nome');",
+									"    pm.expect(jsonData).to.have.property('endereco');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/hotels/{{hotel_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"hotels",
+								"{{hotel_id}}",
+								""
+							]
+						},
+						"description": "Obtém detalhes de um hotel específico. Público para hotéis ativos."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Hotel (Full)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Hotel updated successfully', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData).to.have.property('hotel');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nome\": \"Hotel Paradise Atualizado\",\n    \"descricao\": \"Descrição atualizada do hotel\",\n    \"endereco\": \"Av. Atlântica, 1500 - Copacabana, Rio de Janeiro - RJ, 22021-000\",\n    \"telefone\": \"(21) 98765-4321\",\n    \"email\": \"contato@hotelparadise.com\",\n    \"horario_checkin\": \"15:00:00\",\n    \"horario_checkout\": \"11:00:00\",\n    \"is_active\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/hotels/{{hotel_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"hotels",
+								"{{hotel_id}}",
+								""
+							]
+						},
+						"description": "Atualiza completamente um hotel. Requer autenticação de admin."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Hotel (Partial)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Hotel updated successfully', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData).to.have.property('hotel');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"descricao\": \"Nova descrição parcial atualizada\",\n    \"telefone\": \"(21) 99999-8888\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/hotels/{{hotel_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"hotels",
+								"{{hotel_id}}",
+								""
+							]
+						},
+						"description": "Atualiza parcialmente um hotel. Requer autenticação de admin."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Hotel (Soft Delete)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Hotel deactivated successfully', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData.message).to.include('desativado');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/hotels/{{hotel_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"hotels",
+								"{{hotel_id}}",
+								""
+							]
+						},
+						"description": "Desativa um hotel (soft delete). Requer autenticação de admin. O hotel não é removido, apenas marcado como inativo."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gerenciamento de hotéis"
+		},
+		{
+			"name": "Rooms",
+			"item": [
+				{
+					"name": "List Rooms",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has rooms array', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('rooms');",
+									"    pm.expect(jsonData.rooms).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/rooms/?hotel_id={{hotel_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rooms",
+								""
+							],
+							"query": [
+								{
+									"key": "hotel_id",
+									"value": "{{hotel_id}}",
+									"description": "Filtrar por hotel (opcional)"
+								},
+								{
+									"key": "tipo",
+									"value": "double",
+									"description": "Filtrar por tipo (opcional)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista quartos. Público vê apenas ativos, staff vê todos."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Room",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response has room data', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('room');",
+									"    pm.expect(jsonData.room).to.have.property('id');",
+									"});",
+									"",
+									"// Salvar room_id",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('room_id', jsonData.room.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"hotel\": {{hotel_id}},\n    \"numero\": \"101\",\n    \"tipo\": \"double\",\n    \"descricao\": \"Quarto duplo com vista para o mar\",\n    \"capacidade\": 2,\n    \"preco_diaria\": \"250.00\",\n    \"tem_ar_condicionado\": true,\n    \"tem_wifi\": true,\n    \"tem_tv\": true,\n    \"tem_frigobar\": true,\n    \"tem_banheira\": false,\n    \"tem_varanda\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/rooms/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rooms",
+								""
+							]
+						},
+						"description": "Cria um quarto. Requer autenticação de staff/admin."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Room Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has room data', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('numero');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/rooms/{{room_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rooms",
+								"{{room_id}}",
+								""
+							]
+						},
+						"description": "Obtém detalhes de um quarto. Público para quartos ativos."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Room (Partial)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"preco_diaria\": \"280.00\",\n    \"descricao\": \"Quarto reformado com nova decoração\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/rooms/{{room_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rooms",
+								"{{room_id}}",
+								""
+							]
+						},
+						"description": "Atualiza parcialmente um quarto. Requer autenticação de staff/admin."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Room (Soft Delete)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/rooms/{{room_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rooms",
+								"{{room_id}}",
+								""
+							]
+						},
+						"description": "Desativa um quarto (soft delete). Requer autenticação de staff/admin."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gerenciamento de quartos"
+		},
+		{
+			"name": "Bookings",
+			"item": [
+				{
+					"name": "List My Bookings",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has bookings array', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('bookings');",
+									"    pm.expect(jsonData.bookings).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings",
+								""
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "confirmed",
+									"description": "Filtrar por status (opcional)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista reservas do usuário autenticado."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Booking",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response has booking data', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('booking');",
+									"    pm.expect(jsonData.booking).to.have.property('codigo_reserva');",
+									"});",
+									"",
+									"// Salvar booking_id e código",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set('booking_id', jsonData.booking.id);",
+									"    pm.environment.set('booking_code', jsonData.booking.codigo_reserva);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"room\": {{room_id}},\n    \"data_checkin\": \"2026-02-15\",\n    \"data_checkout\": \"2026-02-18\",\n    \"numero_hospedes\": 2,\n    \"observacoes\": \"Preferência por andar alto\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings",
+								""
+							]
+						},
+						"description": "Cria uma reserva. Requer autenticação. Email de confirmação enviado automaticamente."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Booking Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has booking data', function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('codigo_reserva');",
+									"    pm.expect(jsonData).to.have.property('status');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings",
+								"{{booking_id}}",
+								""
+							]
+						},
+						"description": "Obtém detalhes de uma reserva. Apenas o dono ou staff podem ver."
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Booking",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings",
+								"{{booking_id}}",
+								""
+							]
+						},
+						"description": "Cancela uma reserva. Cliente pode cancelar próprias reservas pending/confirmed. Email enviado."
+					},
+					"response": []
+				},
+				{
+					"name": "Confirm Booking (Staff)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/confirm/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings",
+								"{{booking_id}}",
+								"confirm",
+								""
+							]
+						},
+						"description": "Confirma uma reserva pending. Apenas staff/admin. Email enviado ao cliente."
+					},
+					"response": []
+				},
+				{
+					"name": "Check-in (Staff)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/checkin/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings",
+								"{{booking_id}}",
+								"checkin",
+								""
+							]
+						},
+						"description": "Realiza check-in. Apenas staff/admin."
+					},
+					"response": []
+				},
+				{
+					"name": "Check-out (Staff)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/bookings/{{booking_id}}/checkout/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"bookings",
+								"{{booking_id}}",
+								"checkout",
+								""
+							]
+						},
+						"description": "Realiza check-out. Apenas staff/admin."
+					},
+					"response": []
+				},
+				{
+					"name": "List Hotel Bookings (Staff)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/hotels/{{hotel_id}}/bookings/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"hotels",
+								"{{hotel_id}}",
+								"bookings",
+								""
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "confirmed",
+									"description": "Filtrar por status (opcional)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista todas as reservas de um hotel. Apenas staff/admin."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gerenciamento de reservas"
 		},
 		{
 			"name": "API Documentation",

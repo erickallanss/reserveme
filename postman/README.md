@@ -1,6 +1,6 @@
 # 📮 Postman Collection - ReserveMe API
 
-Collection completa para testar a API ReserveMe com autenticação JWT via cookies HTTP-only.
+Collection completa para testar a API ReserveMe com autenticação JWT via cookies HTTP-only, gerenciamento de hotéis e mais.
 
 ## 📁 Arquivos
 
@@ -78,6 +78,50 @@ POST /api/v1/auth/logout/
 - Remove cookies
 - Limpa variáveis de ambiente
 
+### 4. Testar Endpoints de Hotéis
+
+#### Listar Hotéis (Público)
+```
+GET /api/v1/hotels/
+```
+- Não requer autenticação
+- Retorna apenas hotéis ativos para não-admins
+- Retorna todos os hotéis para admins
+
+#### Criar Hotel (Admin)
+```
+POST /api/v1/hotels/
+```
+- Requer autenticação de admin
+- `hotel_id` salvo automaticamente
+- Campos obrigatórios: nome, endereco, telefone, email, horario_checkin, horario_checkout
+- Campos opcionais: descricao, logo (upload de imagem)
+- **Nota**: Para upload de logo, use `form-data` ao invés de `raw JSON`
+
+#### Ver Detalhes do Hotel
+```
+GET /api/v1/hotels/{hotel_id}/
+```
+- Público para hotéis ativos
+- Admins podem ver hotéis inativos
+
+#### Atualizar Hotel (Admin)
+```
+PUT /api/v1/hotels/{hotel_id}/    # Atualização completa
+PATCH /api/v1/hotels/{hotel_id}/  # Atualização parcial
+```
+- Requer autenticação de admin
+- PUT: todos os campos obrigatórios
+- PATCH: apenas campos que deseja atualizar
+
+#### Desativar Hotel (Admin)
+```
+DELETE /api/v1/hotels/{hotel_id}/
+```
+- Requer autenticação de admin
+- Soft delete: hotel marcado como inativo
+- Não remove do banco de dados
+
 ## 🔒 Autenticação via Cookies
 
 ### Como Funciona
@@ -127,6 +171,7 @@ Cada request tem testes automáticos que:
 | `access_token` | JWT access token | ✅ Auto |
 | `refresh_token` | JWT refresh token | ✅ Auto |
 | `verification_token` | Token de verificação de email | Manual |
+| `hotel_id` | ID do hotel criado | ✅ Auto |
 
 ## 🔄 Fluxo de Autenticação
 
@@ -182,12 +227,52 @@ Cada request tem testes automáticos que:
 - ✅ Aguarde alguns minutos
 - ✅ Limites: Login (5/15min), Register (3/hour)
 
+### 403 Forbidden (Endpoints Admin)
+- ✅ Endpoint requer permissão de admin
+- ✅ Crie um admin via Django admin ou use `POST /api/v1/internal/register/`
+- ✅ Faça login com uma conta admin
+
+### Como Criar um Admin
+**Opção 1 - Via Django Shell:**
+```bash
+docker compose exec web python manage.py createsuperuser
+```
+
+**Opção 2 - Via Django Admin:**
+1. Acesse: http://localhost:8000/admin/
+2. Faça login com superuser
+3. Vá em Users → seu usuário
+4. Altere role para "admin"
+5. Salve
+
+**Opção 3 - Via Internal Register (se já é admin):**
+Use o endpoint `POST /api/v1/internal/register/` autenticado como admin
+
 ## 📚 Documentação Adicional
 
 - **Swagger UI**: http://localhost:8000/api/docs/
 - **ReDoc**: http://localhost:8000/api/redoc/
 - **OpenAPI Schema**: http://localhost:8000/api/schema/
 - **Mailpit UI**: http://localhost:8025
+
+## 📝 Formatos de Dados
+
+### Telefone
+- Formato: `(99) 99999-9999` ou `(99) 9999-9999`
+- Exemplo: `(11) 98765-4321`
+
+### CPF
+- Formato: `999.999.999-99` ou `99999999999`
+- API aceita ambos, mas valida o CPF
+- Exemplo: `123.456.789-00`
+
+### Horários (Check-in/Check-out)
+- Formato: `HH:MM:SS`
+- Exemplo: `14:00:00` (2 PM)
+
+### Data de Nascimento
+- Formato: `YYYY-MM-DD`
+- Exemplo: `1990-01-15`
 
 ## 💡 Dicas
 
@@ -211,10 +296,48 @@ Para criar múltiplos usuários:
 
 Execute o mesmo request 10x seguidas para ver o rate limiting em ação.
 
+### Testar Permissões de Admin
+
+1. Crie um usuário normal via `POST /api/v1/auth/register/`
+2. Tente criar um hotel com usuário comum → 403 Forbidden
+3. Faça login com admin
+4. Tente criar um hotel → Sucesso!
+
+## 🏨 Fluxos Completos
+
+### Fluxo 1: Usuário Cliente Visualiza Hotéis
+```
+1. GET /api/v1/hotels/ (sem autenticação)
+2. GET /api/v1/hotels/{id}/ (sem autenticação)
+```
+
+### Fluxo 2: Admin Gerencia Hotéis
+```
+1. POST /api/v1/internal/register/ → Criar admin
+2. POST /api/v1/auth/login/ → Login admin
+3. POST /api/v1/hotels/ → Criar hotel
+4. GET /api/v1/hotels/ → Listar todos (incluindo inativos)
+5. PATCH /api/v1/hotels/{id}/ → Atualizar parcialmente
+6. DELETE /api/v1/hotels/{id}/ → Desativar hotel
+```
+
+### Fluxo 3: Autenticação Completa
+```
+1. POST /api/v1/auth/register/
+2. POST /api/v1/auth/verify-email/
+3. Django Admin → Aprovar usuário
+4. POST /api/v1/auth/login/
+5. GET /api/v1/auth/me/
+6. PATCH /api/v1/auth/me/
+7. POST /api/v1/auth/change-password/
+8. POST /api/v1/auth/refresh/
+9. POST /api/v1/auth/logout/
+```
+
 ## 🎯 Endpoints Disponíveis
 
-### Authentication
-- ✅ `POST /api/v1/auth/register/` - Registro
+### 🔐 Authentication
+- ✅ `POST /api/v1/auth/register/` - Registro de cliente
 - ✅ `POST /api/v1/auth/verify-email/` - Verificação de email
 - ✅ `POST /api/v1/auth/login/` - Login
 - ✅ `POST /api/v1/auth/logout/` - Logout
@@ -222,6 +345,42 @@ Execute o mesmo request 10x seguidas para ver o rate limiting em ação.
 - ✅ `GET /api/v1/auth/me/` - Ver perfil
 - ✅ `PATCH /api/v1/auth/me/` - Atualizar perfil
 - ✅ `POST /api/v1/auth/change-password/` - Mudar senha
+
+### 🔒 Internal Management (Apenas Admin)
+- ✅ `POST /api/v1/internal/register/` - Registrar usuário interno (admin/staff)
+
+### 🏨 Hotels
+- ✅ `GET /api/v1/hotels/` - Listar hotéis (público para ativos)
+- ✅ `POST /api/v1/hotels/` - Criar hotel (🔒 admin)
+- ✅ `GET /api/v1/hotels/{id}/` - Detalhes do hotel (público para ativos)
+- ✅ `PUT /api/v1/hotels/{id}/` - Atualizar hotel completo (🔒 admin)
+- ✅ `PATCH /api/v1/hotels/{id}/` - Atualizar hotel parcial (🔒 admin)
+- ✅ `DELETE /api/v1/hotels/{id}/` - Desativar hotel (🔒 admin)
+
+### 🛏️ Rooms ⭐ NOVO
+- ✅ `GET /api/v1/rooms/` - Listar quartos (público para ativos)
+- ✅ `POST /api/v1/rooms/` - Criar quarto (🔒 staff/admin)
+- ✅ `GET /api/v1/rooms/{id}/` - Detalhes do quarto (público para ativos)
+- ✅ `PUT /api/v1/rooms/{id}/` - Atualizar quarto completo (🔒 staff/admin)
+- ✅ `PATCH /api/v1/rooms/{id}/` - Atualizar quarto parcial (🔒 staff/admin)
+- ✅ `DELETE /api/v1/rooms/{id}/` - Desativar quarto (🔒 staff/admin)
+
+### 📅 Bookings ⭐ NOVO
+- ✅ `GET /api/v1/bookings/` - Listar minhas reservas (🔒 autenticado)
+- ✅ `POST /api/v1/bookings/` - Criar reserva (🔒 autenticado)
+- ✅ `GET /api/v1/bookings/{id}/` - Detalhes da reserva (🔒 dono ou staff)
+- ✅ `DELETE /api/v1/bookings/{id}/` - Cancelar reserva (🔒 dono ou staff)
+- ✅ `POST /api/v1/bookings/{id}/confirm/` - Confirmar reserva (🔒 staff/admin)
+- ✅ `POST /api/v1/bookings/{id}/checkin/` - Check-in (🔒 staff/admin)
+- ✅ `POST /api/v1/bookings/{id}/checkout/` - Check-out (🔒 staff/admin)
+- ✅ `GET /api/v1/hotels/{id}/bookings/` - Reservas do hotel (🔒 staff/admin)
+
+### 📚 API Documentation
+- ✅ `GET /api/schema/` - OpenAPI Schema
+- ✅ `GET /api/docs/` - Swagger UI
+- ✅ `GET /api/redoc/` - ReDoc
+
+**Total**: 26 endpoints
 
 ---
 
