@@ -6,6 +6,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 from reserveme.permissions import IsAdmin, IsStaffOrAdmin
 from reserveme.serializers import (
     RoomSerializer,
@@ -18,48 +20,74 @@ from reserveme.services.room_service import (
     RoomAlreadyExistsError
 )
 from reserveme.repositories.room_repository import RoomRepository
+from reserveme.filters import RoomFilter
 
 logger = logging.getLogger(__name__)
 
 
 class RoomListCreateAPIView(APIView):
-    """
-    GET: Lista todos os quartos (público para ativos, staff/admin vê todos)
-    POST: Cria um novo quarto (apenas staff/admin)
+    """View para listar e criar quartos.
+    
+    GET: Lista quartos com paginação e filtros.
+        - Público: vê apenas quartos ativos
+        - Staff/Admin: vê todos os quartos
+    POST: Cria novo quarto (requer autenticação staff/admin).
     """
     
     def get_permissions(self):
+        """Define permissões por método HTTP."""
         if self.request.method == 'POST':
             return [IsAuthenticated(), IsStaffOrAdmin()]
         return []
     
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = RoomFilter
+    search_fields = ['numero', 'descricao']
+    ordering_fields = ['preco_diaria', 'capacidade', 'numero', 'created_at']
+    ordering = ['numero']
+    
     def get(self, request):
-        """Lista quartos."""
+        """Lista quartos com paginação e filtros."""
+        from rest_framework.pagination import PageNumberPagination
+        from django.db.models import Q
+        
         room_repository = RoomRepository()
         room_service = RoomService(room_repository)
         
-        # Filtros opcionais
-        hotel_id = request.query_params.get('hotel_id')
-        tipo = request.query_params.get('tipo')
-        
-        # Staff/Admin vê todos, outros apenas ativos
+        # Base queryset
         if request.user.is_authenticated and request.user.is_staff_member:
-            rooms = room_service.list_rooms(hotel_id=hotel_id)
+            from reserveme.models import Room
+            queryset = Room.objects.all().select_related('hotel')
         else:
-            rooms = room_service.list_active_rooms(hotel_id=hotel_id)
+            from reserveme.models import Room
+            queryset = Room.objects.filter(is_active=True).select_related('hotel')
         
-        # Aplicar filtros adicionais
-        if tipo:
-            rooms = [r for r in rooms if r.tipo == tipo]
+        # Aplicar filtros
+        filterset = RoomFilter(request.query_params, queryset=queryset)
+        queryset = filterset.qs
         
-        serializer = RoomSerializer(rooms, many=True)
+        # Aplicar busca
+        search = request.query_params.get('search')
+        if search:
+            queryset = queryset.filter(
+                Q(numero__icontains=search) |
+                Q(descricao__icontains=search)
+            )
         
-        logger.info(f"Listagem de quartos: {len(rooms)} quartos retornados")
+        # Aplicar ordenação
+        ordering = request.query_params.get('ordering', 'numero')
+        queryset = queryset.order_by(ordering)
         
-        return Response({
-            'rooms': serializer.data,
-            'count': len(rooms)
-        }, status=status.HTTP_200_OK)
+        # Paginação
+        paginator = PageNumberPagination()
+        paginator.page_size = int(request.query_params.get('page_size', 20))
+        page = paginator.paginate_queryset(queryset, request)
+        
+        serializer = RoomSerializer(page, many=True)
+        
+        logger.info(f"Listagem de quartos: {len(queryset)} quartos encontrados")
+        
+        return paginator.get_paginated_response(serializer.data)
     
     def post(self, request):
         """Cria um novo quarto."""
@@ -91,13 +119,15 @@ class RoomListCreateAPIView(APIView):
 
 
 class RoomDetailAPIView(APIView):
-    """
-    GET: Obtém detalhes de um quarto (público para ativos)
-    PUT/PATCH: Atualiza um quarto (apenas staff/admin)
-    DELETE: Desativa um quarto (apenas staff/admin)
+    """View para detalhes, atualização e desativação de quarto.
+    
+    GET: Obtém detalhes de um quarto (público para ativos).
+    PUT/PATCH: Atualiza quarto (requer autenticação staff/admin).
+    DELETE: Desativa quarto (requer autenticação staff/admin).
     """
     
     def get_permissions(self):
+        """Define permissões por método HTTP."""
         if self.request.method == 'GET':
             return []
         return [IsAuthenticated(), IsStaffOrAdmin()]

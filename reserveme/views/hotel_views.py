@@ -34,24 +34,31 @@ class HotelListCreateAPIView(APIView):
         return []
     
     def get(self, request):
-        """Lista todos os hotéis ativos."""
+        """Lista hotéis com paginação."""
+        from rest_framework.pagination import PageNumberPagination
+        from reserveme.models import Hotel
+        
         hotel_repository = HotelRepository()
         hotel_service = HotelService(hotel_repository)
         
-        # Listar apenas hotéis ativos para usuários não autenticados
+        # Base queryset
         if not request.user.is_authenticated or not request.user.is_admin:
-            hotels = hotel_service.list_active_hotels()
+            queryset = Hotel.objects.filter(is_active=True)
         else:
-            hotels = hotel_service.list_hotels()
+            queryset = Hotel.objects.all()
         
-        serializer = HotelSerializer(hotels, many=True)
+        queryset = queryset.order_by('nome')
         
-        logger.info(f"Listagem de hotéis: {len(hotels)} hotéis retornados")
+        # Paginação
+        paginator = PageNumberPagination()
+        paginator.page_size = int(request.query_params.get('page_size', 20))
+        page = paginator.paginate_queryset(queryset, request)
         
-        return Response({
-            'hotels': serializer.data,
-            'count': len(hotels)
-        }, status=status.HTTP_200_OK)
+        serializer = HotelSerializer(page, many=True)
+        
+        logger.info(f"Listagem de hotéis: {len(queryset)} hotéis encontrados")
+        
+        return paginator.get_paginated_response(serializer.data)
     
     def post(self, request):
         """Cria um novo hotel."""

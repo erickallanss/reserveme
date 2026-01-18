@@ -6,6 +6,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 from reserveme.permissions import IsStaffOrAdmin
 from reserveme.serializers import (
     BookingSerializer,
@@ -20,6 +22,7 @@ from reserveme.services.booking_service import (
 )
 from reserveme.repositories.booking_repository import BookingRepository
 from reserveme.repositories.room_repository import RoomRepository
+from reserveme.filters import BookingFilter
 from core.utils.helpers import send_template_email_async
 
 logger = logging.getLogger(__name__)
@@ -36,36 +39,52 @@ class BookingListCreateAPIView(APIView):
     """
     permission_classes = [IsAuthenticated]
     
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = BookingFilter
+    ordering_fields = ['created_at', 'data_checkin', 'data_checkout', 'preco_total']
+    ordering = ['-created_at']
+    
     def get(self, request):
-        """Lista reservas.
+        """Lista reservas com paginação e filtros.
         
         - Customer: vê apenas suas próprias reservas
         - Staff/Admin: vê todas as reservas (pode filtrar por user_id)
         """
+        from rest_framework.pagination import PageNumberPagination
+        from reserveme.models import Booking
+        
         booking_repository = BookingRepository()
         room_repository = RoomRepository()
         booking_service = BookingService(booking_repository, room_repository)
         
-        # Staff/Admin vê todas as reservas
+        # Base queryset
         if request.user.is_staff_member:
-            # Pode filtrar por usuário específico se fornecido
+            # Staff/Admin vê todas as reservas
             user_id = request.query_params.get('user_id')
             if user_id:
-                bookings = booking_service.list_user_bookings(int(user_id), request.query_params.get('status'))
+                queryset = Booking.objects.filter(user_id=user_id).select_related('room', 'room__hotel', 'user')
             else:
-                # Lista todas as reservas (incluindo canceladas e concluídas)
-                bookings = booking_service.list_all_bookings(request.query_params.get('status'))
+                queryset = Booking.objects.all().select_related('room', 'room__hotel', 'user')
         else:
             # Customer vê apenas suas próprias reservas
-            booking_status = request.query_params.get('status')
-            bookings = booking_service.list_user_bookings(request.user.id, booking_status)
+            queryset = Booking.objects.filter(user_id=request.user.id).select_related('room', 'room__hotel', 'user')
         
-        serializer = BookingListSerializer(bookings, many=True)
+        # Aplicar filtros
+        filterset = BookingFilter(request.query_params, queryset=queryset)
+        queryset = filterset.qs
         
-        return Response({
-            'bookings': serializer.data,
-            'count': len(bookings)
-        }, status=status.HTTP_200_OK)
+        # Aplicar ordenação
+        ordering = request.query_params.get('ordering', '-created_at')
+        queryset = queryset.order_by(ordering)
+        
+        # Paginação
+        paginator = PageNumberPagination()
+        paginator.page_size = int(request.query_params.get('page_size', 20))
+        page = paginator.paginate_queryset(queryset, request)
+        
+        serializer = BookingListSerializer(page, many=True)
+        
+        return paginator.get_paginated_response(serializer.data)
     
     def post(self, request):
         """Cria uma nova reserva."""
@@ -85,13 +104,17 @@ class BookingListCreateAPIView(APIView):
             
             # Enviar email de confirmação assíncronamente
             send_template_email_async(
-                subject=f'Confirmação de Reserva - {booking.hotel.nome}',
+                subject=f'Confirmação de Reserva - {booking.room.hotel.nome}',
                 template_name='emails/booking_confirmation.html',
                 context={
                     'user_name': request.user.get_full_name(),
-                    'booking': booking,
-                    'hotel': booking.hotel,
-                    'room': booking.room,
+                    'booking_id': booking.id,
+                    'booking_code': booking.codigo_reserva,
+                    'hotel_name': booking.room.hotel.nome,
+                    'room_number': booking.room.numero,
+                    'checkin_date': booking.data_checkin.strftime('%d/%m/%Y'),
+                    'checkout_date': booking.data_checkout.strftime('%d/%m/%Y'),
+                    'total_price': str(booking.preco_total),
                 },
                 recipient_list=[request.user.email]
             )
@@ -162,11 +185,13 @@ class BookingDetailAPIView(APIView):
             
             # Enviar email de cancelamento
             send_template_email_async(
-                subject=f'Reserva Cancelada - {booking.hotel.nome}',
+                subject=f'Reserva Cancelada - {booking.room.hotel.nome}',
                 template_name='emails/booking_cancellation.html',
                 context={
                     'user_name': booking.user.get_full_name(),
-                    'booking': booking,
+                    'booking_code': booking.codigo_reserva,
+                    'hotel_name': booking.room.hotel.nome,
+                    'room_number': booking.room.numero,
                 },
                 recipient_list=[booking.user.email]
             )
@@ -190,13 +215,22 @@ class BookingDetailAPIView(APIView):
 
 
 class BookingConfirmAPIView(APIView):
-    """
-    POST: Confirma uma reserva (apenas staff/admin)
+    """View para confirmar reserva (staff/admin).
+    
+    POST: Confirma uma reserva pendente e envia email ao cliente.
     """
     permission_classes = [IsAuthenticated, IsStaffOrAdmin]
     
     def post(self, request, booking_id):
-        """Confirma uma reserva."""
+        """Confirma uma reserva pendente.
+        
+        Args:
+            request: Request HTTP.
+            booking_id: ID da reserva.
+            
+        Returns:
+            Response com dados da reserva confirmada.
+        """
         booking_repository = BookingRepository()
         room_repository = RoomRepository()
         booking_service = BookingService(booking_repository, room_repository)
@@ -206,13 +240,15 @@ class BookingConfirmAPIView(APIView):
             
             # Enviar email de confirmação
             send_template_email_async(
-                subject=f'Reserva Confirmada - {booking.hotel.nome}',
+                subject=f'Reserva Confirmada - {booking.room.hotel.nome}',
                 template_name='emails/booking_confirmed.html',
                 context={
                     'user_name': booking.user.get_full_name(),
-                    'booking': booking,
-                    'hotel': booking.hotel,
-                    'room': booking.room,
+                    'booking_code': booking.codigo_reserva,
+                    'hotel_name': booking.room.hotel.nome,
+                    'room_number': booking.room.numero,
+                    'checkin_date': booking.data_checkin.strftime('%d/%m/%Y'),
+                    'checkout_date': booking.data_checkout.strftime('%d/%m/%Y'),
                 },
                 recipient_list=[booking.user.email]
             )
@@ -239,13 +275,22 @@ class BookingConfirmAPIView(APIView):
 
 
 class BookingCheckinAPIView(APIView):
-    """
-    POST: Realiza check-in (apenas staff/admin)
+    """View para realizar check-in (staff/admin).
+    
+    POST: Registra check-in de uma reserva confirmada.
     """
     permission_classes = [IsAuthenticated, IsStaffOrAdmin]
     
     def post(self, request, booking_id):
-        """Realiza check-in."""
+        """Realiza check-in de uma reserva.
+        
+        Args:
+            request: Request HTTP.
+            booking_id: ID da reserva.
+            
+        Returns:
+            Response com dados da reserva atualizada.
+        """
         booking_repository = BookingRepository()
         room_repository = RoomRepository()
         booking_service = BookingService(booking_repository, room_repository)
@@ -275,13 +320,22 @@ class BookingCheckinAPIView(APIView):
 
 
 class BookingCheckoutAPIView(APIView):
-    """
-    POST: Realiza check-out (apenas staff/admin)
+    """View para realizar check-out (staff/admin).
+    
+    POST: Registra check-out de uma reserva com check-in realizado.
     """
     permission_classes = [IsAuthenticated, IsStaffOrAdmin]
     
     def post(self, request, booking_id):
-        """Realiza check-out."""
+        """Realiza check-out de uma reserva.
+        
+        Args:
+            request: Request HTTP.
+            booking_id: ID da reserva.
+            
+        Returns:
+            Response com dados da reserva atualizada.
+        """
         booking_repository = BookingRepository()
         room_repository = RoomRepository()
         booking_service = BookingService(booking_repository, room_repository)
@@ -311,13 +365,22 @@ class BookingCheckoutAPIView(APIView):
 
 
 class HotelBookingsAPIView(APIView):
-    """
-    GET: Lista todas as reservas de um hotel (apenas staff/admin)
+    """View para listar reservas de um hotel (staff/admin).
+    
+    GET: Lista todas as reservas de um hotel com paginação e filtros.
     """
     permission_classes = [IsAuthenticated, IsStaffOrAdmin]
     
     def get(self, request, hotel_id):
-        """Lista reservas de um hotel."""
+        """Lista reservas de um hotel específico.
+        
+        Args:
+            request: Request HTTP.
+            hotel_id: ID do hotel.
+            
+        Returns:
+            Response paginada com lista de reservas.
+        """
         booking_repository = BookingRepository()
         room_repository = RoomRepository()
         booking_service = BookingService(booking_repository, room_repository)

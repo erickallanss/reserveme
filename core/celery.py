@@ -1,29 +1,21 @@
-"""
-Celery configuration for ReserveMe project.
-"""
+"""Configuração do Celery para o projeto ReserveMe."""
 import os
 from celery import Celery
+from celery.schedules import crontab
 
-# Set the default Django settings module for the 'celery' program.
+# Configurar módulo de settings do Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
 app = Celery('reserveme')
 
-# Using a string here means the worker doesn't have to serialize
-# the configuration object to child processes.
-# - namespace='CELERY' means all celery-related configuration keys
-#   should have a `CELERY_` prefix.
+# Configurar usando namespace CELERY
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
-# Load task modules from all registered Django apps.
+# Descobrir tasks automaticamente
 app.autodiscover_tasks()
-
-# Import tasks from core.utils explicitly
 app.autodiscover_tasks(['core.utils'])
 
-# Configure Celery Beat schedule
-from celery.schedules import crontab
-
+# Configurar schedule do Celery Beat
 app.conf.beat_schedule = {
     'release-expired-bookings': {
         'task': 'reserveme.tasks.release_expired_bookings_task',
@@ -36,4 +28,5 @@ app.conf.timezone = 'America/Sao_Paulo'
 
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
+    """Task de debug para testar Celery."""
     print(f'Request: {self.request!r}')

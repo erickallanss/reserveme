@@ -45,7 +45,7 @@
 - [x] Templates de email prontos (verificação, boas-vindas)
 - [x] Retry automático em caso de falha (3 tentativas)
 
-### 4. ✅ Modelagem Parcial (40%)
+### 4. ✅ Modelagem Completa (100%)
 - [x] **User (Cliente)** - Completo ✅
   - CPF, telefone, email, avatar
   - Role-based (admin/staff/customer)
@@ -60,13 +60,28 @@
   - CRUD completo com API
   - Repository + Service implementados
 
-- [ ] **Quarto (Room)** - NÃO IMPLEMENTADO ❌
-- [ ] **Reserva (Booking)** - NÃO IMPLEMENTADO ❌
+- [x] **Quarto (Room)** - Completo ✅
+  - 7 tipos de quarto
+  - Comodidades (ar, wifi, TV, etc)
+  - Preço da diária
+  - Soft delete
+  - CRUD completo com API
+  - Repository + Service implementados
 
-### 5. ❌ Tarefa Agendada com Celery Beat (0%)
-- [ ] Task periódica ainda não criada
-- [x] Celery Beat já está rodando no Docker
-- [ ] Falta implementar a lógica de verificação de quartos
+- [x] **Reserva (Booking)** - Completo ✅
+  - Workflow completo de status
+  - Código único automático
+  - Verificação de disponibilidade
+  - Cálculo automático de preços
+  - CRUD completo com API
+  - Repository + Service implementados
+
+### 5. ✅ Tarefa Agendada com Celery Beat (100%)
+- [x] Task periódica implementada
+- [x] Celery Beat rodando no Docker
+- [x] Lógica de verificação e liberação de quartos
+- [x] Executa a cada 1 hora
+- [x] Envia email de notificação
 
 ---
 
@@ -428,7 +443,7 @@ app.conf.beat_schedule = {
 | **Dockerização** | ✅ Completo | 100% |
 | **Autenticação/Autorização** | ✅ Completo | 100% |
 | **Email com Celery** | ✅ Completo | 100% |
-| **Celery Beat (infraestrutura)** | ✅ Rodando | 100% |
+| **Celery Beat** | ✅ Completo | 100% |
 | **Modelagem: User** | ✅ Completo | 100% |
 | **Modelagem: Hotel** | ✅ Completo | 100% |
 | **Modelagem: Room** | ✅ Completo | 100% |
@@ -437,7 +452,11 @@ app.conf.beat_schedule = {
 | **API Booking (CRUD)** | ✅ Completo | 100% |
 | **Verificação Disponibilidade** | ✅ Completo | 100% |
 | **Email de Confirmação** | ✅ Completo | 100% |
-| **Task Agendada (lógica)** | ✅ Completo | 100% |
+| **Task Agendada** | ✅ Completo | 100% |
+| **Paginação e Filtros** | ✅ Completo | 100% |
+| **Testes Unitários** | ✅ Completo | 100% |
+| **Testes Integração** | ✅ Completo | 100% |
+| **Documentação (Docstrings)** | ✅ Completo | 100% |
 
 **Total Geral: 🎉 100% COMPLETO! ✅**
 

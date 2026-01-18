@@ -1,6 +1,4 @@
-"""
-Service para operações de Booking.
-"""
+"""Service para operações de Booking."""
 import logging
 from typing import Optional, List, Dict, Any
 from datetime import date
@@ -15,37 +13,50 @@ logger = logging.getLogger(__name__)
 
 
 class BookingNotFoundError(Exception):
-    """Exceção quando reserva não é encontrada."""
+    """Exceção lançada quando reserva não é encontrada."""
     pass
 
 
 class RoomNotAvailableError(Exception):
-    """Exceção quando quarto não está disponível."""
+    """Exceção lançada quando quarto não está disponível no período."""
     pass
 
 
 class InvalidBookingError(Exception):
-    """Exceção para validações de reserva."""
+    """Exceção lançada quando validações de reserva falham."""
     pass
 
 
 class BookingService:
-    """Service para gerenciar lógica de negócio de Booking."""
+    """Service para gerenciar lógica de negócio de Booking.
+    
+    Centraliza regras de negócio para reservas, incluindo validações
+    de datas, capacidade, disponibilidade e cálculos de preços.
+    """
     
     def __init__(
         self, 
         booking_repository: BookingRepository,
         room_repository: RoomRepository
     ):
+        """Inicializa o service com repositories.
+        
+        Args:
+            booking_repository: Instância do BookingRepository.
+            room_repository: Instância do RoomRepository.
+        """
         self.booking_repository = booking_repository
         self.room_repository = room_repository
     
     def validate_dates(self, data_checkin: date, data_checkout: date) -> None:
-        """
-        Valida as datas da reserva.
+        """Valida datas de check-in e check-out.
         
+        Args:
+            data_checkin: Data de entrada.
+            data_checkout: Data de saída.
+            
         Raises:
-            InvalidBookingError: Se datas inválidas
+            InvalidBookingError: Se datas são inválidas.
         """
         hoje = timezone.now().date()
         
@@ -62,22 +73,46 @@ class BookingService:
         preco_diaria: Decimal, 
         numero_diarias: int
     ) -> Decimal:
-        """Calcula o preço total da reserva."""
+        """Calcula o preço total da reserva.
+        
+        Args:
+            preco_diaria: Preço por noite.
+            numero_diarias: Número de noites.
+            
+        Returns:
+            Preço total calculado.
+        """
         return preco_diaria * numero_diarias
     
     def calculate_numero_diarias(self, data_checkin: date, data_checkout: date) -> int:
-        """Calcula o número de diárias."""
+        """Calcula o número de diárias entre duas datas.
+        
+        Args:
+            data_checkin: Data de entrada.
+            data_checkout: Data de saída.
+            
+        Returns:
+            Número de dias (diárias).
+        """
         delta = data_checkout - data_checkin
         return delta.days
     
     @transaction.atomic
     def create_booking(self, data: Dict[str, Any]) -> Booking:
-        """
-        Cria uma nova reserva.
+        """Cria uma nova reserva com validações completas.
         
+        Valida datas, capacidade, disponibilidade e calcula preços
+        automaticamente. Reserva é criada com status 'pending'.
+        
+        Args:
+            data: Dicionário com dados da reserva (room, user, datas, etc).
+            
+        Returns:
+            Instância da reserva criada.
+            
         Raises:
-            InvalidBookingError: Se dados inválidos
-            RoomNotAvailableError: Se quarto não disponível
+            InvalidBookingError: Se dados são inválidos.
+            RoomNotAvailableError: Se quarto não está disponível.
         """
         room = data.get('room')
         user = data.get('user')
@@ -121,7 +156,7 @@ class BookingService:
             'observacoes': data.get('observacoes', '')
         }
         
-        booking = self.booking_repository.create(booking_data)
+        booking = self.booking_repository.create(**booking_data)
         logger.info(
             f"Reserva criada: {booking.codigo_reserva} - "
             f"{user.email} - {room.hotel.nome} Quarto {room.numero}"
@@ -205,8 +240,8 @@ class BookingService:
             )
         
         updated_booking = self.booking_repository.update(
-            booking_id, 
-            {'status': 'confirmed'}
+            booking,
+            status='confirmed'
         )
         
         logger.info(f"Reserva confirmada: {booking.codigo_reserva}")
@@ -214,12 +249,18 @@ class BookingService:
     
     @transaction.atomic
     def cancel_booking(self, booking_id: int, user_id: Optional[int] = None) -> Booking:
-        """
-        Cancela uma reserva.
+        """Cancela uma reserva.
         
+        Args:
+            booking_id: ID da reserva.
+            user_id: ID do usuário (opcional, para verificar permissão).
+            
+        Returns:
+            Instância da reserva cancelada.
+            
         Raises:
-            BookingNotFoundError: Se reserva não existe
-            InvalidBookingError: Se reserva não pode ser cancelada
+            BookingNotFoundError: Se reserva não existe.
+            InvalidBookingError: Se não pode cancelar ou sem permissão.
         """
         booking = self.get_booking(booking_id)
         
@@ -233,11 +274,9 @@ class BookingService:
             raise InvalidBookingError("Você não tem permissão para cancelar esta reserva.")
         
         updated_booking = self.booking_repository.update(
-            booking_id,
-            {
-                'status': 'cancelled',
-                'cancelled_at': timezone.now()
-            }
+            booking,
+            status='cancelled',
+            cancelled_at=timezone.now()
         )
         
         logger.info(f"Reserva cancelada: {booking.codigo_reserva}")
@@ -245,12 +284,17 @@ class BookingService:
     
     @transaction.atomic
     def checkin(self, booking_id: int) -> Booking:
-        """
-        Realiza check-in (apenas staff/admin).
+        """Realiza check-in de uma reserva (apenas staff/admin).
         
+        Args:
+            booking_id: ID da reserva.
+            
+        Returns:
+            Instância da reserva com check-in realizado.
+            
         Raises:
-            BookingNotFoundError: Se reserva não existe
-            InvalidBookingError: Se não pode fazer check-in
+            BookingNotFoundError: Se reserva não existe.
+            InvalidBookingError: Se status não permite check-in.
         """
         booking = self.get_booking(booking_id)
         
@@ -260,11 +304,9 @@ class BookingService:
             )
         
         updated_booking = self.booking_repository.update(
-            booking_id,
-            {
-                'status': 'checked_in',
-                'checked_in_at': timezone.now()
-            }
+            booking,
+            status='checked_in',
+            checked_in_at=timezone.now()
         )
         
         logger.info(f"Check-in realizado: {booking.codigo_reserva}")
@@ -272,12 +314,17 @@ class BookingService:
     
     @transaction.atomic
     def checkout(self, booking_id: int) -> Booking:
-        """
-        Realiza check-out (apenas staff/admin).
+        """Realiza check-out de uma reserva (apenas staff/admin).
         
+        Args:
+            booking_id: ID da reserva.
+            
+        Returns:
+            Instância da reserva com check-out realizado.
+            
         Raises:
-            BookingNotFoundError: Se reserva não existe
-            InvalidBookingError: Se não pode fazer check-out
+            BookingNotFoundError: Se reserva não existe.
+            InvalidBookingError: Se status não permite check-out.
         """
         booking = self.get_booking(booking_id)
         
@@ -287,11 +334,9 @@ class BookingService:
             )
         
         updated_booking = self.booking_repository.update(
-            booking_id,
-            {
-                'status': 'checked_out',
-                'checked_out_at': timezone.now()
-            }
+            booking,
+            status='checked_out',
+            checked_out_at=timezone.now()
         )
         
         logger.info(f"Check-out realizado: {booking.codigo_reserva}")
@@ -303,7 +348,16 @@ class BookingService:
         data_checkin: date,
         data_checkout: date
     ) -> bool:
-        """Verifica disponibilidade de um quarto."""
+        """Verifica disponibilidade de um quarto no período.
+        
+        Args:
+            room_id: ID do quarto.
+            data_checkin: Data de entrada.
+            data_checkout: Data de saída.
+            
+        Returns:
+            True se disponível, False se ocupado.
+        """
         self.validate_dates(data_checkin, data_checkout)
         return self.booking_repository.check_room_availability(
             room_id, data_checkin, data_checkout

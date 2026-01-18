@@ -1,6 +1,4 @@
-"""
-Service para operações de Room.
-"""
+"""Service para operações de Room."""
 import logging
 from typing import Optional, List, Dict, Any
 from reserveme.models import Room
@@ -10,27 +8,41 @@ logger = logging.getLogger(__name__)
 
 
 class RoomNotFoundError(Exception):
-    """Exceção quando quarto não é encontrado."""
+    """Exceção lançada quando quarto não é encontrado."""
     pass
 
 
 class RoomAlreadyExistsError(Exception):
-    """Exceção quando quarto já existe."""
+    """Exceção lançada quando quarto com mesmo número já existe no hotel."""
     pass
 
 
 class RoomService:
-    """Service para gerenciar lógica de negócio de Room."""
+    """Service para gerenciar lógica de negócio de Room.
+    
+    Centraliza regras de negócio e validações para operações
+    de quartos, delegando acesso a dados ao repository.
+    """
     
     def __init__(self, room_repository: RoomRepository):
+        """Inicializa o service com um repository.
+        
+        Args:
+            room_repository: Instância do RoomRepository.
+        """
         self.room_repository = room_repository
     
     def create_room(self, data: Dict[str, Any]) -> Room:
-        """
-        Cria um novo quarto.
+        """Cria um novo quarto com validações.
         
+        Args:
+            data: Dicionário com dados do quarto.
+            
+        Returns:
+            Instância do quarto criado.
+            
         Raises:
-            RoomAlreadyExistsError: Se já existe quarto com este número no hotel
+            RoomAlreadyExistsError: Se número já existe no hotel.
         """
         hotel_id = data.get('hotel').id if hasattr(data.get('hotel'), 'id') else data.get('hotel')
         numero = data.get('numero')
@@ -41,17 +53,22 @@ class RoomService:
                 f"Já existe um quarto com o número '{numero}' neste hotel."
             )
         
-        room = self.room_repository.create(data)
+        room = self.room_repository.create(**data)
         logger.info(f"Quarto criado: {room.hotel.nome} - {room.numero}")
         
         return room
     
     def get_room(self, room_id: int) -> Room:
-        """
-        Busca quarto por ID.
+        """Busca quarto por ID.
         
+        Args:
+            room_id: ID do quarto.
+            
+        Returns:
+            Instância do quarto.
+            
         Raises:
-            RoomNotFoundError: Se quarto não existe
+            RoomNotFoundError: Se quarto não existe.
         """
         room = self.room_repository.get_by_id(room_id)
         if not room:
@@ -59,11 +76,17 @@ class RoomService:
         return room
     
     def get_room_by_numero(self, hotel_id: int, numero: str) -> Room:
-        """
-        Busca quarto por número dentro de um hotel.
+        """Busca quarto por número dentro de um hotel.
         
+        Args:
+            hotel_id: ID do hotel.
+            numero: Número do quarto.
+            
+        Returns:
+            Instância do quarto.
+            
         Raises:
-            RoomNotFoundError: Se quarto não existe
+            RoomNotFoundError: Se quarto não existe.
         """
         room = self.room_repository.get_by_numero(hotel_id, numero)
         if not room:
@@ -73,22 +96,42 @@ class RoomService:
         return room
     
     def list_rooms(self, hotel_id: Optional[int] = None) -> List[Room]:
-        """Lista todos os quartos, opcionalmente filtrados por hotel."""
+        """Lista todos os quartos, opcionalmente filtrados por hotel.
+        
+        Args:
+            hotel_id: ID do hotel (opcional).
+            
+        Returns:
+            Lista de quartos.
+        """
         if hotel_id:
             return self.room_repository.get_by_hotel(hotel_id)
         return self.room_repository.get_all()
     
     def list_active_rooms(self, hotel_id: Optional[int] = None) -> List[Room]:
-        """Lista quartos ativos."""
+        """Lista apenas quartos ativos.
+        
+        Args:
+            hotel_id: ID do hotel (opcional).
+            
+        Returns:
+            Lista de quartos ativos.
+        """
         return self.room_repository.get_active_rooms(hotel_id)
     
     def update_room(self, room_id: int, data: Dict[str, Any]) -> Room:
-        """
-        Atualiza um quarto.
+        """Atualiza um quarto existente.
         
+        Args:
+            room_id: ID do quarto.
+            data: Dicionário com campos a atualizar.
+            
+        Returns:
+            Instância do quarto atualizado.
+            
         Raises:
-            RoomNotFoundError: Se quarto não existe
-            RoomAlreadyExistsError: Se novo número já existe
+            RoomNotFoundError: Se quarto não existe.
+            RoomAlreadyExistsError: Se novo número já existe.
         """
         room = self.get_room(room_id)
         
@@ -100,7 +143,7 @@ class RoomService:
                     f"Já existe um quarto com o número '{data['numero']}' neste hotel."
                 )
         
-        updated_room = self.room_repository.update(room_id, data)
+        updated_room = self.room_repository.update(room, **data)
         logger.info(f"Quarto atualizado: {updated_room.hotel.nome} - {updated_room.numero}")
         
         return updated_room
@@ -114,7 +157,7 @@ class RoomService:
         """
         room = self.get_room(room_id)
         
-        self.room_repository.update(room_id, {'is_active': False})
+        self.room_repository.update(room, is_active=False)
         logger.info(f"Quarto desativado: {room.hotel.nome} - {room.numero}")
     
     def activate_room(self, room_id: int) -> Room:

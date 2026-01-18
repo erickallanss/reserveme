@@ -47,7 +47,7 @@ class TestHotelListCreateAPI:
         response = api_client.get(url)
         
         assert response.status_code == status.HTTP_200_OK
-        assert 'hotels' in response.data
+        assert 'results' in response.data
         assert response.data['count'] == 3
     
     def test_list_hotels_admin_sees_all(self, admin_client):

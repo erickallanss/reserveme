@@ -8,9 +8,17 @@ from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
-    """
-    Custom User model para o sistema ReserveMe.
-    Extends AbstractUser do Django com campos adicionais.
+    """Modelo de usuário customizado para o sistema ReserveMe.
+    
+    Estende AbstractUser do Django com campos adicionais como CPF,
+    telefone, avatar e sistema de roles (admin/staff/customer).
+    
+    Attributes:
+        email: Email único do usuário (usado como USERNAME_FIELD)
+        cpf: CPF único do usuário
+        telefone: Telefone no formato (99) 99999-9999
+        role: Papel do usuário (admin, staff ou customer)
+        email_verified: Indica se o email foi verificado
     """
     
     ROLE_CHOICES = [
@@ -105,28 +113,52 @@ class User(AbstractUser):
         return f'<User: {self.email} - {self.role}>'
     
     def can_login(self):
-        """Verifica se o usuário pode fazer login."""
+        """Verifica se o usuário pode fazer login.
+        
+        Returns:
+            bool: True se usuário está ativo e email verificado.
+        """
         return self.is_active and self.email_verified
     
     @property
     def is_admin(self):
-        """Verifica se o usuário é admin."""
+        """Verifica se o usuário é administrador.
+        
+        Returns:
+            bool: True se role é 'admin' ou é superuser.
+        """
         return self.role == 'admin' or self.is_superuser
     
     @property
     def is_staff_member(self):
-        """Verifica se o usuário é staff."""
+        """Verifica se o usuário é staff ou admin.
+        
+        Returns:
+            bool: True se role é 'staff' ou 'admin'.
+        """
         return self.role == 'staff' or self.is_admin
     
     @property
     def is_customer(self):
-        """Verifica se o usuário é cliente."""
+        """Verifica se o usuário é cliente.
+        
+        Returns:
+            bool: True se role é 'customer'.
+        """
         return self.role == 'customer'
 
 
 class Hotel(models.Model):
-    """
-    Modelo para representar um Hotel no sistema.
+    """Modelo que representa um Hotel no sistema.
+    
+    Attributes:
+        nome: Nome único do hotel
+        endereco: Endereço completo
+        telefone: Telefone de contato
+        email: Email de contato
+        horario_checkin: Horário padrão de check-in
+        horario_checkout: Horário padrão de check-out
+        is_active: Indica se o hotel está ativo
     """
     
     nome = models.CharField(
@@ -211,8 +243,15 @@ class Hotel(models.Model):
 
 
 class Room(models.Model):
-    """
-    Modelo para representar um Quarto em um Hotel.
+    """Modelo que representa um Quarto em um Hotel.
+    
+    Attributes:
+        hotel: Hotel ao qual o quarto pertence
+        numero: Número do quarto (único por hotel)
+        tipo: Tipo do quarto (single, double, suite, etc)
+        capacidade: Número máximo de hóspedes
+        preco_diaria: Preço da diária em reais
+        is_active: Indica se o quarto está disponível para reservas
     """
     
     TIPO_CHOICES = [
@@ -341,12 +380,20 @@ class Room(models.Model):
     
     @property
     def nome_completo(self):
-        """Retorna nome completo do quarto."""
+        """Retorna nome completo formatado do quarto.
+        
+        Returns:
+            str: Nome no formato "Quarto {numero} - {tipo}".
+        """
         return f"Quarto {self.numero} - {self.get_tipo_display()}"
     
     @property
     def comodidades_list(self):
-        """Retorna lista de comodidades disponíveis."""
+        """Retorna lista de comodidades disponíveis no quarto.
+        
+        Returns:
+            list: Lista de strings com comodidades ativas.
+        """
         comodidades = []
         if self.tem_ar_condicionado:
             comodidades.append('Ar Condicionado')
@@ -364,8 +411,16 @@ class Room(models.Model):
 
 
 class Booking(models.Model):
-    """
-    Modelo para representar uma Reserva de Quarto.
+    """Modelo que representa uma Reserva de Quarto.
+    
+    Attributes:
+        room: Quarto reservado
+        user: Cliente que fez a reserva
+        codigo_reserva: Código único gerado automaticamente
+        data_checkin: Data de entrada
+        data_checkout: Data de saída
+        status: Status da reserva (pending, confirmed, checked_in, etc)
+        preco_total: Valor total calculado automaticamente
     """
     
     STATUS_CHOICES = [
@@ -490,31 +545,55 @@ class Booking(models.Model):
     
     @property
     def hotel(self):
-        """Retorna o hotel da reserva."""
+        """Retorna o hotel associado ao quarto da reserva.
+        
+        Returns:
+            Hotel: Instância do hotel.
+        """
         return self.room.hotel
     
     @property
     def is_active(self):
-        """Verifica se a reserva está ativa (não cancelada/não finalizada)."""
+        """Verifica se a reserva está ativa.
+        
+        Returns:
+            bool: True se status é pending, confirmed ou checked_in.
+        """
         return self.status in ['pending', 'confirmed', 'checked_in']
     
     @property
     def can_cancel(self):
-        """Verifica se a reserva pode ser cancelada."""
+        """Verifica se a reserva pode ser cancelada.
+        
+        Returns:
+            bool: True se status permite cancelamento.
+        """
         return self.status in ['pending', 'confirmed']
     
     @property
     def can_checkin(self):
-        """Verifica se pode fazer check-in."""
+        """Verifica se pode realizar check-in.
+        
+        Returns:
+            bool: True se status é 'confirmed'.
+        """
         return self.status == 'confirmed'
     
     @property
     def can_checkout(self):
-        """Verifica se pode fazer check-out."""
+        """Verifica se pode realizar check-out.
+        
+        Returns:
+            bool: True se status é 'checked_in'.
+        """
         return self.status == 'checked_in'
     
     def save(self, *args, **kwargs):
-        """Override save para gerar código da reserva automaticamente."""
+        """Override save para gerar código único da reserva automaticamente.
+        
+        O código é gerado no formato RES-YYYYMMDD-XXXX onde XXXX são
+        dígitos aleatórios. Se já existir, gera um novo.
+        """
         if not self.codigo_reserva:
             from django.utils import timezone
             import random

@@ -1,6 +1,4 @@
-"""
-Celery tasks para operações de Booking.
-"""
+"""Celery tasks para operações de Booking."""
 import logging
 from celery import shared_task
 from django.utils import timezone
@@ -12,13 +10,16 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def release_expired_bookings_task():
-    """
-    Task periódica para liberar quartos de reservas expiradas.
+    """Task periódica para liberar quartos de reservas expiradas.
     
-    Busca reservas com status 'pending' que já passaram da data de check-in
-    e as cancela automaticamente, liberando o quarto.
+    Busca reservas com status 'pending' cuja data de check-in já passou
+    e as cancela automaticamente, liberando o quarto para novas reservas.
+    Envia email de notificação ao cliente.
     
     Executa a cada 1 hora via Celery Beat.
+    
+    Returns:
+        dict: Estatísticas da execução (status, count, message).
     """
     hoje = timezone.now().date()
     
@@ -71,11 +72,13 @@ def release_expired_bookings_task():
 
 @shared_task(bind=True, max_retries=3)
 def send_booking_reminder_task(self, booking_id: int):
-    """
-    Task para enviar lembrete de check-in 1 dia antes.
+    """Task para enviar lembrete de check-in 1 dia antes.
     
     Args:
-        booking_id: ID da reserva
+        booking_id: ID da reserva.
+        
+    Returns:
+        dict: Status da execução.
     """
     try:
         booking = Booking.objects.select_related(
