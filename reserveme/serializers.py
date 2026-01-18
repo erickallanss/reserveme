@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions as django_exceptions
 from core.utils.helpers import validate_cpf, format_cpf
-from reserveme.models import Hotel
+from reserveme.models import Hotel, Room, Booking
 import re
 
 User = get_user_model()
@@ -380,4 +380,164 @@ class HotelUpdateSerializer(serializers.ModelSerializer):
                 'Telefone deve estar no formato: (99) 99999-9999'
             )
         return value
+
+
+# Room Serializers
+class RoomSerializer(serializers.ModelSerializer):
+    """Serializer para leitura de Room."""
+    
+    hotel_nome = serializers.CharField(source='hotel.nome', read_only=True)
+    tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
+    nome_completo = serializers.CharField(read_only=True)
+    comodidades = serializers.ListField(source='comodidades_list', read_only=True)
+    
+    class Meta:
+        model = Room
+        fields = [
+            'id', 'hotel', 'hotel_nome', 'numero', 'tipo', 'tipo_display',
+            'nome_completo', 'descricao', 'capacidade', 'preco_diaria',
+            'tem_ar_condicionado', 'tem_wifi', 'tem_tv', 'tem_frigobar',
+            'tem_banheira', 'tem_varanda', 'comodidades',
+            'foto_principal', 'is_active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class RoomCreateSerializer(serializers.ModelSerializer):
+    """Serializer para criação de Room."""
+    
+    class Meta:
+        model = Room
+        fields = [
+            'hotel', 'numero', 'tipo', 'descricao', 'capacidade', 'preco_diaria',
+            'tem_ar_condicionado', 'tem_wifi', 'tem_tv', 'tem_frigobar',
+            'tem_banheira', 'tem_varanda', 'foto_principal'
+        ]
+    
+    def validate_capacidade(self, value):
+        """Valida capacidade."""
+        if value < 1:
+            raise serializers.ValidationError("Capacidade deve ser no mínimo 1.")
+        if value > 10:
+            raise serializers.ValidationError("Capacidade máxima é 10 pessoas.")
+        return value
+    
+    def validate_preco_diaria(self, value):
+        """Valida preço da diária."""
+        if value <= 0:
+            raise serializers.ValidationError("Preço da diária deve ser maior que zero.")
+        return value
+
+
+class RoomUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para atualização de Room."""
+    
+    class Meta:
+        model = Room
+        fields = [
+            'numero', 'tipo', 'descricao', 'capacidade', 'preco_diaria',
+            'tem_ar_condicionado', 'tem_wifi', 'tem_tv', 'tem_frigobar',
+            'tem_banheira', 'tem_varanda', 'foto_principal', 'is_active'
+        ]
+    
+    def validate_capacidade(self, value):
+        """Valida capacidade."""
+        if value < 1:
+            raise serializers.ValidationError("Capacidade deve ser no mínimo 1.")
+        if value > 10:
+            raise serializers.ValidationError("Capacidade máxima é 10 pessoas.")
+        return value
+    
+    def validate_preco_diaria(self, value):
+        """Valida preço da diária."""
+        if value <= 0:
+            raise serializers.ValidationError("Preço da diária deve ser maior que zero.")
+        return value
+
+
+# Booking Serializers
+class BookingSerializer(serializers.ModelSerializer):
+    """Serializer para leitura de Booking."""
+    
+    # Dados do usuário
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    user_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    
+    # Dados do quarto
+    room_numero = serializers.CharField(source='room.numero', read_only=True)
+    room_tipo = serializers.CharField(source='room.get_tipo_display', read_only=True)
+    
+    # Dados do hotel
+    hotel_nome = serializers.CharField(source='room.hotel.nome', read_only=True)
+    hotel_endereco = serializers.CharField(source='room.hotel.endereco', read_only=True)
+    hotel_telefone = serializers.CharField(source='room.hotel.telefone', read_only=True)
+    
+    # Status display
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    class Meta:
+        model = Booking
+        fields = [
+            'id', 'codigo_reserva', 'status', 'status_display',
+            'user', 'user_email', 'user_name',
+            'room', 'room_numero', 'room_tipo',
+            'hotel_nome', 'hotel_endereco', 'hotel_telefone',
+            'data_checkin', 'data_checkout', 'numero_hospedes', 'numero_diarias',
+            'preco_diaria', 'preco_total', 'observacoes',
+            'created_at', 'updated_at', 'cancelled_at',
+            'checked_in_at', 'checked_out_at'
+        ]
+        read_only_fields = [
+            'id', 'codigo_reserva', 'status', 'numero_diarias',
+            'preco_diaria', 'preco_total', 'created_at', 'updated_at',
+            'cancelled_at', 'checked_in_at', 'checked_out_at'
+        ]
+
+
+class BookingCreateSerializer(serializers.Serializer):
+    """Serializer para criação de Booking."""
+    
+    room = serializers.PrimaryKeyRelatedField(queryset=Room.objects.filter(is_active=True))
+    data_checkin = serializers.DateField()
+    data_checkout = serializers.DateField()
+    numero_hospedes = serializers.IntegerField(min_value=1)
+    observacoes = serializers.CharField(required=False, allow_blank=True)
+    
+    def validate_numero_hospedes(self, value):
+        """Valida número de hóspedes."""
+        if value < 1:
+            raise serializers.ValidationError("Número de hóspedes deve ser no mínimo 1.")
+        if value > 10:
+            raise serializers.ValidationError("Número máximo de hóspedes é 10.")
+        return value
+    
+    def validate(self, attrs):
+        """Validações gerais."""
+        data_checkin = attrs.get('data_checkin')
+        data_checkout = attrs.get('data_checkout')
+        
+        if data_checkout <= data_checkin:
+            raise serializers.ValidationError({
+                'data_checkout': 'Data de check-out deve ser posterior à data de check-in.'
+            })
+        
+        return attrs
+
+
+class BookingListSerializer(serializers.ModelSerializer):
+    """Serializer simplificado para listagem de bookings."""
+    
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    room_numero = serializers.CharField(source='room.numero', read_only=True)
+    hotel_nome = serializers.CharField(source='room.hotel.nome', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    class Meta:
+        model = Booking
+        fields = [
+            'id', 'codigo_reserva', 'status', 'status_display',
+            'user_email', 'room_numero', 'hotel_nome',
+            'data_checkin', 'data_checkout', 'numero_diarias',
+            'preco_total', 'created_at'
+        ]
 
