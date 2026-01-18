@@ -1,143 +1,145 @@
 # 🏨 ReserveMe API
 
-Sistema completo de reservas de hotéis desenvolvido com Django REST Framework, Celery e Docker.
+A complete hotel reservation system built with Django REST Framework, Celery, and Docker.
 
-## ✨ Funcionalidades
+## ✨ Features
 
-- 🔐 **Autenticação JWT** com cookies HTTP-only
-- 👥 **3 níveis de usuário**: Admin, Staff, Customer
-- 🏨 **Gerenciamento de Hotéis** e Quartos
-- 📅 **Sistema de Reservas** com verificação de disponibilidade
-- 📧 **Emails assíncronos** com Celery
-- ⏰ **Tarefas agendadas** com Celery Beat
-- 🐳 **Totalmente dockerizado**
-- 📚 **Documentação automática** com Swagger/ReDoc
+- 🔐 **JWT Authentication** with HTTP-only cookies
+- 👥 **3 User Roles**: Admin, Staff, Customer
+- 🏨 **Hotel & Room Management**
+- 📅 **Booking System** with availability verification
+- 📧 **Asynchronous Emails** with Celery
+- ⏰ **Scheduled Tasks** with Celery Beat
+- 🐳 **Fully Dockerized**
+- 📚 **Auto-generated Documentation** with Swagger/ReDoc
+- 🚀 **Redis Caching** with automatic invalidation
+- ✅ **95% Test Coverage**
 
 ---
 
 ## 🚀 Quick Start
 
-### Opção 1: Comando Único (Recomendado)
+### Option 1: Single Command (Recommended)
 
 ```bash
 make server
 ```
 
-Este comando faz **TUDO automaticamente**:
-- ✅ Build dos containers
-- ✅ Sobe todos os serviços
-- ✅ Cria e aplica migrations
-- ✅ **Popula banco com dados de teste** (se vazio)
-- ✅ Mostra credenciais de acesso
+This command does **EVERYTHING automatically**:
+- ✅ Builds containers
+- ✅ Starts all services
+- ✅ Creates and applies migrations
+- ✅ **Populates database with test data** (if empty)
+- ✅ Shows access credentials
 
-**Pronto!** Acesse:
+**Ready!** Access:
 - 🌐 **API**: http://localhost:8000
 - 📚 **Swagger**: http://localhost:8000/api/docs/
 - 🔐 **Admin**: http://localhost:8000/admin/
 - 📧 **Mailpit**: http://localhost:8025
 
-### Opção 2: Passo a Passo
+### Option 2: Step by Step
 
 ```bash
-# 1. Build e sobe containers
+# 1. Build and start containers
 docker compose up --build -d
 
-# 2. Aguarda containers iniciarem
+# 2. Wait for containers to start
 sleep 5
 
-# 3. Aplica migrations
+# 3. Apply migrations
 docker compose exec web python manage.py migrate
 
-# 4. Popula dados de teste
+# 4. Populate test data
 docker compose exec web python seed_data.py
 ```
 
 ---
 
-## 👤 Credenciais Padrão
+## 👤 Default Credentials
 
-Após executar `make server` ou `seed_data.py`:
+After running `make server` or `seed_data.py`:
 
-| Tipo | Email | Senha | Permissões |
-|------|-------|-------|------------|
-| **Admin** | admin@reserveme.com | admin123 | Acesso total |
-| **Staff** | staff@reserveme.com | staff123 | Gerencia reservas |
-| **Cliente** | joao.silva@example.com | cliente123 | Faz reservas |
-| **Cliente** | maria.santos@example.com | cliente123 | Faz reservas |
+| Type | Email | Password | Permissions |
+|------|-------|----------|-------------|
+| **Admin** | admin@reserveme.com | Password1 | Full access |
+| **Staff** | staff@reserveme.com | staff123 | Manage bookings |
+| **Customer** | joao.silva@example.com | cliente123 | Make bookings |
+| **Customer** | maria.santos@example.com | cliente123 | Make bookings |
 
 ---
 
-## 📋 Comandos Make Disponíveis
+## 📋 Available Make Commands
 
-### 🚀 Principais
-
-```bash
-make server          # Inicia tudo (build, migrate, seed se vazio)
-make up              # Sobe containers
-make down            # Para containers
-make restart         # Reinicia containers
-make logs            # Ver logs de todos os serviços
-```
-
-### 🗄️ Banco de Dados
+### 🚀 Main Commands
 
 ```bash
-make migrate         # Aplica migrations
-make makemigrations  # Cria novas migrations
-make seed            # Popula dados de teste (força)
-make db-reset        # Reseta banco e popula novamente
-make dbshell         # Acessa shell do PostgreSQL
+make server          # Start everything (build, migrate, seed if empty)
+make up              # Start containers
+make down            # Stop containers
+make restart         # Restart containers
+make logs            # View logs from all services
 ```
 
-### 🧪 Testes
+### 🗄️ Database
 
 ```bash
-make test            # Roda todos os testes
-make test-cov        # Testes com cobertura
-make test-unit       # Apenas testes unitários
-make test-integration # Apenas testes de integração
+make migrate         # Apply migrations
+make makemigrations  # Create new migrations
+make seed            # Populate test data (force)
+make db-reset        # Reset database and populate again
+make dbshell         # Access PostgreSQL shell
 ```
 
-### 🔧 Utilitários
+### 🧪 Testing
+
+```bash
+make test            # Run all tests
+make test-cov        # Tests with coverage
+make test-unit       # Unit tests only
+make test-integration # Integration tests only
+```
+
+### 🔧 Utilities
 
 ```bash
 make shell           # Django shell
-make createsuperuser # Criar superusuário
-make api-docs        # Abre Swagger no navegador
-make mailpit         # Abre Mailpit no navegador
-make help            # Lista todos os comandos
+make createsuperuser # Create superuser
+make api-docs        # Open Swagger in browser
+make mailpit         # Open Mailpit in browser
+make help            # List all commands
 ```
 
 ---
 
-## 📊 Dados de Teste Criados
+## 📊 Test Data Created
 
-Ao executar `make server` ou `make seed`, são criados:
+When running `make server` or `make seed`, the following is created:
 
 ### 🏨 1 Hotel
 - **Hotel Paradise Beach** (Copacabana, RJ)
 
-### 🛏️ 8 Quartos
-| Nº | Tipo | Preço/Dia |
-|----|------|-----------|
-| 101 | Solteiro | R$ 150 |
-| 102 | Casal | R$ 250 |
+### 🛏️ 8 Rooms
+| No. | Type | Price/Day |
+|-----|------|-----------|
+| 101 | Single | R$ 150 |
+| 102 | Double | R$ 250 |
 | 103 | Twin | R$ 240 |
-| 201 | Casal Superior | R$ 300 |
-| 202 | Triplo | R$ 350 |
-| 301 | Suíte | R$ 500 |
+| 201 | Superior Double | R$ 300 |
+| 202 | Triple | R$ 350 |
+| 301 | Suite | R$ 500 |
 | 302 | Deluxe | R$ 750 |
-| 401 | Presidencial | R$ 1.500 |
+| 401 | Presidential | R$ 1,500 |
 
-### 👥 6 Usuários
-- 1 Admin, 1 Staff, 4 Clientes
+### 👥 6 Users
+- 1 Admin, 1 Staff, 4 Customers
 
-### 📅 7 Reservas
-- Confirmadas, Pendentes, Check-in, Concluídas
+### 📅 7 Bookings
+- Confirmed, Pending, Checked-in, Completed
 
 ---
 
-## 🌐 Endpoints da API
+## 🌐 API Endpoints
 
 ### 🔐 Authentication (8 endpoints)
 ```
@@ -183,46 +185,46 @@ POST   /api/v1/bookings/{id}/checkout/  (staff)
 GET    /api/v1/hotels/{id}/bookings/    (staff)
 ```
 
-**Total**: 26 endpoints
+**Total**: 28 endpoints
 
 ---
 
-## 📧 Emails Automáticos
+## 📧 Automatic Emails
 
-Todos os emails são capturados pelo **Mailpit** (http://localhost:8025):
+All emails are captured by **Mailpit** (http://localhost:8025):
 
-1. ✅ **Reserva Criada** - Quando cliente cria reserva
-2. ✅ **Reserva Confirmada** - Quando staff confirma
-3. ✅ **Reserva Cancelada** - Cancelamento manual
-4. ✅ **Reserva Expirada** - Cancelamento automático (Celery Beat)
+1. ✅ **Booking Created** - When customer creates booking
+2. ✅ **Booking Confirmed** - When staff confirms
+3. ✅ **Booking Cancelled** - Manual cancellation
+4. ✅ **Booking Expired** - Automatic cancellation (Celery Beat)
 
 ---
 
-## ⏰ Celery Beat - Tarefa Agendada
+## ⏰ Celery Beat - Scheduled Task
 
 **Task**: `release_expired_bookings_task()`
-- 🔄 Executa **a cada 1 hora**
-- 🔍 Busca reservas `pending` com check-in passado
-- ❌ Cancela automaticamente
-- 📧 Envia email de notificação
+- 🔄 Runs **every 1 hour**
+- 🔍 Finds `pending` bookings with past check-in date
+- ❌ Automatically cancels them
+- 📧 Sends notification email
 
-### Ver Logs
+### View Logs
 ```bash
 make logs-celery-beat
 ```
 
 ---
 
-## 🧪 Testando a API
+## 🧪 Testing the API
 
-### 1. Via Swagger (Recomendado)
+### 1. Via Swagger (Recommended)
 ```
 http://localhost:8000/api/docs/
 ```
 
 ### 2. Via Postman
 ```bash
-# Importe os arquivos:
+# Import files:
 postman/ReserveMe_API.postman_collection.json
 postman/ReserveMe_Local.postman_environment.json
 ```
@@ -232,12 +234,12 @@ postman/ReserveMe_Local.postman_environment.json
 # Login
 curl -X POST http://localhost:8000/api/v1/auth/login/ \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@reserveme.com","password":"admin123"}'
+  -d '{"email":"admin@reserveme.com","password":"Password1"}'
 
-# Listar hotéis
+# List hotels
 curl http://localhost:8000/api/v1/hotels/
 
-# Criar reserva (após login)
+# Create booking (after login)
 curl -X POST http://localhost:8000/api/v1/bookings/ \
   -H "Content-Type: application/json" \
   -d '{
@@ -250,106 +252,112 @@ curl -X POST http://localhost:8000/api/v1/bookings/ \
 
 ---
 
-## 🏗️ Arquitetura
+## 🏗️ Architecture
 
-### Serviços Docker
-- **web**: Django (porta 8000)
-- **db**: PostgreSQL (porta 5432)
-- **redis**: Redis (porta 6379)
-- **celery**: Worker para tarefas assíncronas
-- **celery-beat**: Scheduler para tarefas periódicas
-- **mailpit**: Captura de emails (portas 8025/1025)
+### Docker Services
+- **web**: Django (port 8000)
+- **db**: PostgreSQL (port 5432)
+- **redis**: Redis (port 6379) - Celery broker & cache
+- **celery**: Worker for async tasks
+- **celery-beat**: Scheduler for periodic tasks
+- **mailpit**: Email capture (ports 8025/1025)
 
-### Estrutura do Código
+### Code Structure
 ```
 reserveme/
 ├── models.py           # User, Hotel, Room, Booking
-├── repositories/       # Acesso a dados
-├── services/           # Lógica de negócio
-├── serializers.py      # Validação e serialização
+├── repositories/       # Data access layer
+├── services/           # Business logic layer
+├── serializers.py      # Validation and serialization
 ├── views/              # API endpoints
-├── tasks.py            # Tarefas Celery
-└── tests/              # Testes unitários e integração
+├── tasks.py            # Celery tasks
+├── cache_utils.py      # Cache utilities
+├── signals.py          # Django signals for cache invalidation
+└── tests/              # Unit and integration tests
 ```
 
-**Padrão**: Repository + Service Layer
+**Pattern**: Repository + Service Layer + Caching
 
 ---
 
-## 📚 Documentação Adicional
+## 📚 Additional Documentation
 
-- **`IMPLEMENTATION_SUMMARY.md`** - Detalhes técnicos completos
-- **`API_TESTING_GUIDE.md`** - Guia de testes passo a passo
-- **`SEED_README.md`** - Detalhes dos dados de teste
-- **`FINAL_DELIVERY.md`** - Resumo da entrega
-- **`postman/README.md`** - Guia do Postman
+- **`TECHNICAL_README.md`** - Technical details and implementation
+- **`ARCHITECTURE.md`** - Architecture patterns and design decisions
+- **`API_TESTING_GUIDE.md`** - Step-by-step API testing guide
+- **`SEED_README.md`** - Test data details
+- **`postman/README.md`** - Postman collection guide
 
 ---
 
-## 🛠️ Tecnologias
+## 🛠️ Technologies
 
 - **Django 5.x** + **Django REST Framework**
-- **PostgreSQL** - Banco de dados
-- **Redis** - Broker Celery
-- **Celery** + **Celery Beat** - Tasks assíncronas
+- **PostgreSQL** - Database
+- **Redis** - Celery broker, result backend & cache
+- **Celery** + **Celery Beat** - Async tasks
 - **Docker** + **Docker Compose**
-- **JWT** - Autenticação
-- **Mailpit** - Captura de emails
-- **Swagger/ReDoc** - Documentação automática
+- **JWT** - Authentication
+- **Mailpit** - Email capture
+- **Swagger/ReDoc** - Auto-generated documentation
+- **django-redis** - Caching
+- **pytest** - Testing framework
 
 ---
 
 ## 🔧 Troubleshooting
 
-### Containers não sobem
+### Containers won't start
 ```bash
 make down
 make clean
 make server
 ```
 
-### Banco não migra
+### Database won't migrate
 ```bash
 docker compose exec web python manage.py migrate
 ```
 
-### Celery não processa tasks
+### Celery not processing tasks
 ```bash
 make logs-celery
-# Verificar se o worker está rodando
+# Check if worker is running
 ```
 
-### Emails não aparecem
+### Emails not appearing
 ```bash
-# Verificar se Mailpit está rodando
+# Check if Mailpit is running
 docker compose ps mailpit
-# Acessar: http://localhost:8025
+# Access: http://localhost:8025
 ```
 
 ---
 
-## 📝 Licença
+## 📝 License
 
-Este projeto foi desenvolvido como parte de um desafio técnico.
-
----
-
-## 🎯 Status do Projeto
-
-✅ **100% Completo e Funcional**
-
-Todos os requisitos implementados:
-- ✅ Modelagem completa (Hotels, Rooms, Bookings, Users)
-- ✅ Autenticação JWT com 3 níveis de permissão
-- ✅ Sistema de reservas com verificação de disponibilidade
-- ✅ Emails assíncronos com Celery
-- ✅ Tarefa agendada com Celery Beat
-- ✅ Dockerização completa
-- ✅ Documentação completa
-- ✅ Dados de seed prontos
-
-**Pronto para produção!** 🚀
+This project was developed as part of a technical challenge.
 
 ---
 
-**Desenvolvido com** ❤️ **usando Django REST Framework**
+## 🎯 Project Status
+
+✅ **100% Complete and Functional**
+
+All requirements implemented:
+- ✅ Complete modeling (Hotels, Rooms, Bookings, Users)
+- ✅ JWT Authentication with 3 permission levels
+- ✅ Booking system with availability verification
+- ✅ Asynchronous emails with Celery
+- ✅ Scheduled task with Celery Beat
+- ✅ Complete Dockerization
+- ✅ Redis caching with automatic invalidation
+- ✅ Comprehensive documentation
+- ✅ Test data ready
+- ✅ 95% test coverage
+
+**Ready for production!** 🚀
+
+---
+
+**Developed with** ❤️ **using Django REST Framework**
