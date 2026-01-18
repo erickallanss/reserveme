@@ -1,7 +1,6 @@
-"""
-Views para operações de Hotel.
-"""
+"""Views para operações de Hotel."""
 import logging
+from django.core.cache import cache
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -18,6 +17,7 @@ from reserveme.services.hotel_service import (
     HotelNotFoundError
 )
 from reserveme.repositories.hotel_repository import HotelRepository
+from reserveme.cache_utils import get_cache_key
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +34,19 @@ class HotelListCreateAPIView(APIView):
         return []
     
     def get(self, request):
-        """Lista hotéis com paginação."""
+        """Lista hotéis com paginação e cache."""
         from rest_framework.pagination import PageNumberPagination
         from reserveme.models import Hotel
+        
+        # Chave de cache baseada no usuário e filtros
+        is_admin = request.user.is_authenticated and request.user.is_admin
+        cache_key = get_cache_key('hotels', 'list', admin=is_admin)
+        
+        # Tentar obter do cache
+        cached_response = cache.get(cache_key)
+        if cached_response:
+            logger.debug(f"Cache hit: {cache_key}")
+            return Response(cached_response)
         
         hotel_repository = HotelRepository()
         hotel_service = HotelService(hotel_repository)
@@ -55,10 +65,15 @@ class HotelListCreateAPIView(APIView):
         page = paginator.paginate_queryset(queryset, request)
         
         serializer = HotelSerializer(page, many=True)
+        response_data = paginator.get_paginated_response(serializer.data).data
+        
+        # Salvar no cache (5 minutos)
+        cache.set(cache_key, response_data, 300)
+        logger.debug(f"Cache set: {cache_key}")
         
         logger.info(f"Listagem de hotéis: {len(queryset)} hotéis encontrados")
         
-        return paginator.get_paginated_response(serializer.data)
+        return Response(response_data)
     
     def post(self, request):
         """Cria um novo hotel."""
@@ -70,6 +85,8 @@ class HotelListCreateAPIView(APIView):
         
         try:
             hotel = hotel_service.create_hotel(serializer.validated_data)
+            
+            # Cache será invalidado automaticamente via signal
             
             response_serializer = HotelSerializer(hotel)
             
@@ -99,7 +116,15 @@ class HotelDetailAPIView(APIView):
         return [IsAuthenticated(), IsAdmin()]
     
     def get(self, request, hotel_id):
-        """Obtém detalhes de um hotel."""
+        """Obtém detalhes de um hotel com cache."""
+        cache_key = get_cache_key('hotel', hotel_id)
+        
+        # Tentar obter do cache
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            logger.debug(f"Cache hit: {cache_key}")
+            return Response(cached_data, status=status.HTTP_200_OK)
+        
         hotel_repository = HotelRepository()
         hotel_service = HotelService(hotel_repository)
         
@@ -113,8 +138,13 @@ class HotelDetailAPIView(APIView):
                 }, status=status.HTTP_404_NOT_FOUND)
             
             serializer = HotelSerializer(hotel)
+            response_data = serializer.data
             
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            # Salvar no cache (10 minutos para detalhes)
+            cache.set(cache_key, response_data, 600)
+            logger.debug(f"Cache set: {cache_key}")
+            
+            return Response(response_data, status=status.HTTP_200_OK)
             
         except HotelNotFoundError as e:
             return Response({

@@ -1,7 +1,6 @@
-"""
-Views para operações de Booking.
-"""
+"""Views para operações de Booking."""
 import logging
+from django.core.cache import cache
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -23,6 +22,7 @@ from reserveme.services.booking_service import (
 from reserveme.repositories.booking_repository import BookingRepository
 from reserveme.repositories.room_repository import RoomRepository
 from reserveme.filters import BookingFilter
+from reserveme.cache_utils import get_cache_key, invalidate_booking_cache
 from core.utils.helpers import send_template_email_async
 
 logger = logging.getLogger(__name__)
@@ -45,13 +45,28 @@ class BookingListCreateAPIView(APIView):
     ordering = ['-created_at']
     
     def get(self, request):
-        """Lista reservas com paginação e filtros.
+        """Lista reservas com paginação, filtros e cache.
         
         - Customer: vê apenas suas próprias reservas
         - Staff/Admin: vê todas as reservas (pode filtrar por user_id)
         """
         from rest_framework.pagination import PageNumberPagination
         from reserveme.models import Booking
+        from hashlib import md5
+        
+        # Gerar chave de cache baseada nos parâmetros
+        params_str = str(sorted(request.query_params.items()))
+        params_hash = md5(params_str.encode()).hexdigest()[:8]
+        user_id = request.user.id if request.user.is_authenticated else None
+        is_staff = request.user.is_staff_member if request.user.is_authenticated else False
+        cache_key = get_cache_key('bookings', 'list', user=user_id, staff=is_staff, params=params_hash)
+        
+        # Tentar obter do cache (apenas para customers, staff pode ter dados mais dinâmicos)
+        if not is_staff:
+            cached_response = cache.get(cache_key)
+            if cached_response:
+                logger.debug(f"Cache hit: {cache_key}")
+                return Response(cached_response)
         
         booking_repository = BookingRepository()
         room_repository = RoomRepository()
@@ -60,9 +75,9 @@ class BookingListCreateAPIView(APIView):
         # Base queryset
         if request.user.is_staff_member:
             # Staff/Admin vê todas as reservas
-            user_id = request.query_params.get('user_id')
-            if user_id:
-                queryset = Booking.objects.filter(user_id=user_id).select_related('room', 'room__hotel', 'user')
+            filter_user_id = request.query_params.get('user_id')
+            if filter_user_id:
+                queryset = Booking.objects.filter(user_id=filter_user_id).select_related('room', 'room__hotel', 'user')
             else:
                 queryset = Booking.objects.all().select_related('room', 'room__hotel', 'user')
         else:
@@ -83,8 +98,14 @@ class BookingListCreateAPIView(APIView):
         page = paginator.paginate_queryset(queryset, request)
         
         serializer = BookingListSerializer(page, many=True)
+        response_data = paginator.get_paginated_response(serializer.data).data
         
-        return paginator.get_paginated_response(serializer.data)
+        # Salvar no cache apenas para customers (2 minutos)
+        if not is_staff:
+            cache.set(cache_key, response_data, 120)
+            logger.debug(f"Cache set: {cache_key}")
+        
+        return Response(response_data)
     
     def post(self, request):
         """Cria uma nova reserva."""
@@ -101,6 +122,9 @@ class BookingListCreateAPIView(APIView):
         
         try:
             booking = booking_service.create_booking(booking_data)
+            
+            # Invalidar cache de reservas do usuário
+            invalidate_booking_cache(user_id=request.user.id)
             
             # Enviar email de confirmação assíncronamente
             send_template_email_async(
@@ -183,6 +207,9 @@ class BookingDetailAPIView(APIView):
             
             booking = booking_service.cancel_booking(booking_id, user_id)
             
+            # Invalidar cache
+            invalidate_booking_cache(booking_id=booking.id, user_id=booking.user_id)
+            
             # Enviar email de cancelamento
             send_template_email_async(
                 subject=f'Reserva Cancelada - {booking.room.hotel.nome}',
@@ -237,6 +264,9 @@ class BookingConfirmAPIView(APIView):
         
         try:
             booking = booking_service.confirm_booking(booking_id)
+            
+            # Invalidar cache
+            invalidate_booking_cache(booking_id=booking.id, user_id=booking.user_id)
             
             # Enviar email de confirmação
             send_template_email_async(
@@ -298,6 +328,9 @@ class BookingCheckinAPIView(APIView):
         try:
             booking = booking_service.checkin(booking_id)
             
+            # Invalidar cache
+            invalidate_booking_cache(booking_id=booking.id, user_id=booking.user_id)
+            
             serializer = BookingSerializer(booking)
             
             logger.info(
@@ -342,6 +375,9 @@ class BookingCheckoutAPIView(APIView):
         
         try:
             booking = booking_service.checkout(booking_id)
+            
+            # Invalidar cache
+            invalidate_booking_cache(booking_id=booking.id, user_id=booking.user_id)
             
             serializer = BookingSerializer(booking)
             

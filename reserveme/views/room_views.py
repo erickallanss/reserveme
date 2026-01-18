@@ -1,7 +1,6 @@
-"""
-Views para operações de Room.
-"""
+"""Views para operações de Room."""
 import logging
+from django.core.cache import cache
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -21,6 +20,7 @@ from reserveme.services.room_service import (
 )
 from reserveme.repositories.room_repository import RoomRepository
 from reserveme.filters import RoomFilter
+from reserveme.cache_utils import get_cache_key
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +47,22 @@ class RoomListCreateAPIView(APIView):
     ordering = ['numero']
     
     def get(self, request):
-        """Lista quartos com paginação e filtros."""
+        """Lista quartos com paginação, filtros e cache."""
         from rest_framework.pagination import PageNumberPagination
         from django.db.models import Q
+        from hashlib import md5
+        
+        # Gerar chave de cache baseada nos parâmetros
+        params_str = str(sorted(request.query_params.items()))
+        params_hash = md5(params_str.encode()).hexdigest()[:8]
+        is_staff = request.user.is_authenticated and request.user.is_staff_member
+        cache_key = get_cache_key('rooms', 'list', staff=is_staff, params=params_hash)
+        
+        # Tentar obter do cache
+        cached_response = cache.get(cache_key)
+        if cached_response:
+            logger.debug(f"Cache hit: {cache_key}")
+            return Response(cached_response)
         
         room_repository = RoomRepository()
         room_service = RoomService(room_repository)
@@ -84,10 +97,15 @@ class RoomListCreateAPIView(APIView):
         page = paginator.paginate_queryset(queryset, request)
         
         serializer = RoomSerializer(page, many=True)
+        response_data = paginator.get_paginated_response(serializer.data).data
+        
+        # Salvar no cache (3 minutos para listagens com filtros)
+        cache.set(cache_key, response_data, 180)
+        logger.debug(f"Cache set: {cache_key}")
         
         logger.info(f"Listagem de quartos: {len(queryset)} quartos encontrados")
         
-        return paginator.get_paginated_response(serializer.data)
+        return Response(response_data)
     
     def post(self, request):
         """Cria um novo quarto."""
@@ -99,6 +117,8 @@ class RoomListCreateAPIView(APIView):
         
         try:
             room = room_service.create_room(serializer.validated_data)
+            
+            # Cache será invalidado automaticamente via signal
             
             response_serializer = RoomSerializer(room)
             
@@ -133,7 +153,15 @@ class RoomDetailAPIView(APIView):
         return [IsAuthenticated(), IsStaffOrAdmin()]
     
     def get(self, request, room_id):
-        """Obtém detalhes de um quarto."""
+        """Obtém detalhes de um quarto com cache."""
+        cache_key = get_cache_key('room', room_id)
+        
+        # Tentar obter do cache
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            logger.debug(f"Cache hit: {cache_key}")
+            return Response(cached_data, status=status.HTTP_200_OK)
+        
         room_repository = RoomRepository()
         room_service = RoomService(room_repository)
         
@@ -150,8 +178,13 @@ class RoomDetailAPIView(APIView):
                 }, status=status.HTTP_404_NOT_FOUND)
             
             serializer = RoomSerializer(room)
+            response_data = serializer.data
             
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            # Salvar no cache (10 minutos para detalhes)
+            cache.set(cache_key, response_data, 600)
+            logger.debug(f"Cache set: {cache_key}")
+            
+            return Response(response_data, status=status.HTTP_200_OK)
             
         except RoomNotFoundError as e:
             return Response({
