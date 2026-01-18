@@ -1,0 +1,66 @@
+═══════════════════════════════════════════════════════
+✅ RESERVA CRIADA COM SUCESSO!
+═══════════════════════════════════════════════════════
+
+Olá {{ user_name }},
+
+Sua reserva foi criada com sucesso!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 DETALHES DA RESERVA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Código da Reserva: {{ booking.codigo_reserva }}
+Status: ⏳ Pendente de Confirmação
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏨 INFORMAÇÕES DO HOTEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Hotel: {{ hotel.nome }}
+Endereço: {{ hotel.endereco }}
+Telefone: {{ hotel.telefone }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🛏️ INFORMAÇÕES DO QUARTO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Quarto: Nº {{ room.numero }} - {{ room.get_tipo_display }}
+Capacidade: {{ room.capacidade }} pessoa(s)
+Hóspedes: {{ booking.numero_hospedes }} pessoa(s)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 DATAS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Check-in: {{ booking.data_checkin|date:"d/m/Y" }} às {{ hotel.horario_checkin }}
+Check-out: {{ booking.data_checkout|date:"d/m/Y" }} às {{ hotel.horario_checkout }}
+Diárias: {{ booking.numero_diarias }} noite(s)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💰 VALOR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Preço da Diária: R$ {{ booking.preco_diaria }}
+Valor Total: R$ {{ booking.preco_total }}
+
+{% if booking.observacoes %}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 OBSERVAÇÕES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{{ booking.observacoes }}
+{% endif %}
+
+═══════════════════════════════════════════════════════
+
+⚠️ IMPORTANTE: Sua reserva está PENDENTE DE CONFIRMAÇÃO pelo hotel.
+Você receberá um novo email quando a reserva for confirmada.
+
+Para cancelar ou consultar sua reserva, entre em contato
+diretamente com o hotel.
+
+═══════════════════════════════════════════════════════
+Este é um email automático. Por favor, não responda.
+© 2026 ReserveMe - Sistema de Reservas de Hotéis
+═══════════════════════════════════════════════════════

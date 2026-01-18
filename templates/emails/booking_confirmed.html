@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva Confirmada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #2196F3;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .booking-details {
+            background-color: white;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+            margin: 20px 0;
+        }
+        .booking-details h3 {
+            margin-top: 0;
+            color: #2196F3;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #666;
+        }
+        .value {
+            color: #333;
+        }
+        .footer {
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 0 0 5px 5px;
+            font-size: 12px;
+        }
+        .price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .success-box {
+            background-color: #e7f5ff;
+            border: 2px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎉 Reserva Confirmada!</h1>
+    </div>
+    
+    <div class="content">
+        <p>Olá <strong>{{ user_name }}</strong>,</p>
+        
+        <div class="success-box">
+            <h2 style="margin:0; color: #2196F3;">✅ Sua reserva foi confirmada pelo hotel!</h2>
+            <p style="margin: 10px 0 0 0;">Aguardamos você!</p>
+        </div>
+        
+        <p>Sua reserva foi confirmada e está garantida. Veja os detalhes abaixo:</p>
+        
+        <div class="booking-details">
+            <h3>📋 Detalhes da Reserva</h3>
+            
+            <div class="detail-row">
+                <span class="label">Código da Reserva:</span>
+                <span class="value"><strong>{{ booking.codigo_reserva }}</strong></span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Status:</span>
+                <span class="value">✅ Confirmada</span>
+            </div>
+        </div>
+        
+        <div class="booking-details">
+            <h3>🏨 Hotel</h3>
+            
+            <div class="detail-row">
+                <span class="label">Nome:</span>
+                <span class="value">{{ hotel.nome }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Endereço:</span>
+                <span class="value">{{ hotel.endereco }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Telefone:</span>
+                <span class="value">{{ hotel.telefone }}</span>
+            </div>
+        </div>
+        
+        <div class="booking-details">
+            <h3>📅 Datas e Horários</h3>
+            
+            <div class="detail-row">
+                <span class="label">Check-in:</span>
+                <span class="value">{{ booking.data_checkin|date:"d/m/Y" }} às {{ hotel.horario_checkin }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Check-out:</span>
+                <span class="value">{{ booking.data_checkout|date:"d/m/Y" }} às {{ hotel.horario_checkout }}</span>
+            </div>
+        </div>
+        
+        <div class="booking-details">
+            <h3>🛏️ Quarto</h3>
+            
+            <div class="detail-row">
+                <span class="label">Número:</span>
+                <span class="value">{{ room.numero }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Tipo:</span>
+                <span class="value">{{ room.get_tipo_display }}</span>
+            </div>
+        </div>
+        
+        <div class="booking-details">
+            <h3>💰 Valor Total</h3>
+            <p class="price" style="text-align: center; margin: 10px 0;">R$ {{ booking.preco_total }}</p>
+        </div>
+        
+        <p style="margin-top: 30px; text-align: center; font-size: 14px;">
+            <strong>Lembre-se:</strong><br>
+            Apresente-se no hotel com antecedência no horário de check-in.<br>
+            Traga um documento de identidade válido.
+        </p>
+        
+        <p style="text-align: center; color: #666; font-size: 12px;">
+            Em caso de dúvidas, entre em contato diretamente com o hotel.
+        </p>
+    </div>
+    
+    <div class="footer">
+        <p>Este é um email automático. Por favor, não responda.</p>
+        <p>© 2026 ReserveMe - Sistema de Reservas de Hotéis</p>
+    </div>
+</body>
+</html>

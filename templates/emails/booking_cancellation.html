@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva Cancelada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f44336;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .booking-details {
+            background-color: white;
+            padding: 15px;
+            border-left: 4px solid #f44336;
+            margin: 20px 0;
+        }
+        .booking-details h3 {
+            margin-top: 0;
+            color: #f44336;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #666;
+        }
+        .value {
+            color: #333;
+        }
+        .footer {
+            background-color: #333;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 0 0 5px 5px;
+            font-size: 12px;
+        }
+        .warning-box {
+            background-color: #ffebee;
+            border: 2px solid #f44336;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>❌ Reserva Cancelada</h1>
+    </div>
+    
+    <div class="content">
+        <p>Olá <strong>{{ user_name }}</strong>,</p>
+        
+        <div class="warning-box">
+            <h2 style="margin:0; color: #f44336;">Sua reserva foi cancelada</h2>
+            <p style="margin: 10px 0 0 0;">Código: {{ booking.codigo_reserva }}</p>
+        </div>
+        
+        <p>Informamos que a reserva abaixo foi cancelada:</p>
+        
+        <div class="booking-details">
+            <h3>📋 Detalhes da Reserva Cancelada</h3>
+            
+            <div class="detail-row">
+                <span class="label">Código da Reserva:</span>
+                <span class="value"><strong>{{ booking.codigo_reserva }}</strong></span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Hotel:</span>
+                <span class="value">{{ booking.room.hotel.nome }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Quarto:</span>
+                <span class="value">Nº {{ booking.room.numero }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Check-in:</span>
+                <span class="value">{{ booking.data_checkin|date:"d/m/Y" }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Check-out:</span>
+                <span class="value">{{ booking.data_checkout|date:"d/m/Y" }}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="label">Cancelada em:</span>
+                <span class="value">{{ booking.cancelled_at|date:"d/m/Y H:i" }}</span>
+            </div>
+        </div>
+        
+        <p style="margin-top: 30px; text-align: center;">
+            Se você não solicitou este cancelamento ou tem alguma dúvida,<br>
+            entre em contato conosco imediatamente.
+        </p>
+        
+        <p style="text-align: center; color: #666; font-size: 14px;">
+            Esperamos recebê-lo em breve em uma nova reserva!
+        </p>
+    </div>
+    
+    <div class="footer">
+        <p>Este é um email automático. Por favor, não responda.</p>
+        <p>© 2026 ReserveMe - Sistema de Reservas de Hotéis</p>
+    </div>
+</body>
+</html>
