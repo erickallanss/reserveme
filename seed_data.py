@@ -43,11 +43,14 @@ def create_users():
         }
     )
     if created:
-        admin.set_password('admin123')
+        admin.set_password('Password1')
         admin.save()
-        print(f"  ✅ Admin criado: {admin.email} / admin123")
+        print(f"  ✅ Admin criado: {admin.email} / Password1")
     else:
-        print(f"  ⏭️  Admin já existe: {admin.email}")
+        # Atualizar senha se o admin já existir
+        admin.set_password('Password1')
+        admin.save()
+        print(f"  ✅ Admin atualizado: {admin.email} / Password1")
     
     # Staff
     staff, created = User.objects.get_or_create(
@@ -411,7 +414,7 @@ def main():
         print(f"  • {Booking.objects.count()} reserva(s)")
         
         print(f"\n🔑 Credenciais de Acesso:")
-        print(f"  • Admin:   admin@reserveme.com / admin123")
+        print(f"  • Admin:   admin@reserveme.com / Password1")
         print(f"  • Staff:   staff@reserveme.com / staff123")
         print(f"  • Cliente: joao.silva@example.com / cliente123")
         print(f"  • Cliente: maria.santos@example.com / cliente123")
