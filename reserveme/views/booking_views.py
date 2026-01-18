@@ -132,13 +132,29 @@ class BookingListCreateAPIView(APIView):
                 template_name='emails/booking_confirmation.html',
                 context={
                     'user_name': request.user.get_full_name(),
-                    'booking_id': booking.id,
-                    'booking_code': booking.codigo_reserva,
-                    'hotel_name': booking.room.hotel.nome,
-                    'room_number': booking.room.numero,
-                    'checkin_date': booking.data_checkin.strftime('%d/%m/%Y'),
-                    'checkout_date': booking.data_checkout.strftime('%d/%m/%Y'),
-                    'total_price': str(booking.preco_total),
+                    'booking': {
+                        'codigo_reserva': booking.codigo_reserva,
+                        'data_checkin': booking.data_checkin,
+                        'data_checkout': booking.data_checkout,
+                        'numero_hospedes': booking.numero_hospedes,
+                        'numero_diarias': booking.numero_diarias,
+                        'preco_diaria': booking.preco_diaria,
+                        'preco_total': booking.preco_total,
+                        'observacoes': booking.observacoes or '',
+                    },
+                    'hotel': {
+                        'nome': booking.room.hotel.nome,
+                        'endereco': booking.room.hotel.endereco,
+                        'telefone': booking.room.hotel.telefone,
+                        'horario_checkin': booking.room.hotel.horario_checkin,
+                        'horario_checkout': booking.room.hotel.horario_checkout,
+                    },
+                    'room': {
+                        'numero': booking.room.numero,
+                        'tipo': booking.room.tipo,
+                        'capacidade': booking.room.capacidade,
+                        'get_tipo_display': booking.room.get_tipo_display(),
+                    },
                 },
                 recipient_list=[request.user.email]
             )
@@ -216,9 +232,18 @@ class BookingDetailAPIView(APIView):
                 template_name='emails/booking_cancellation.html',
                 context={
                     'user_name': booking.user.get_full_name(),
-                    'booking_code': booking.codigo_reserva,
-                    'hotel_name': booking.room.hotel.nome,
-                    'room_number': booking.room.numero,
+                    'booking': {
+                        'codigo_reserva': booking.codigo_reserva,
+                        'data_checkin': booking.data_checkin,
+                        'data_checkout': booking.data_checkout,
+                        'cancelled_at': booking.cancelled_at or booking.updated_at,
+                        'room': {
+                            'numero': booking.room.numero,
+                            'hotel': {
+                                'nome': booking.room.hotel.nome,
+                            },
+                        },
+                    },
                 },
                 recipient_list=[booking.user.email]
             )
@@ -274,11 +299,24 @@ class BookingConfirmAPIView(APIView):
                 template_name='emails/booking_confirmed.html',
                 context={
                     'user_name': booking.user.get_full_name(),
-                    'booking_code': booking.codigo_reserva,
-                    'hotel_name': booking.room.hotel.nome,
-                    'room_number': booking.room.numero,
-                    'checkin_date': booking.data_checkin.strftime('%d/%m/%Y'),
-                    'checkout_date': booking.data_checkout.strftime('%d/%m/%Y'),
+                    'booking': {
+                        'codigo_reserva': booking.codigo_reserva,
+                        'data_checkin': booking.data_checkin,
+                        'data_checkout': booking.data_checkout,
+                        'preco_total': booking.preco_total,
+                    },
+                    'hotel': {
+                        'nome': booking.room.hotel.nome,
+                        'endereco': booking.room.hotel.endereco,
+                        'telefone': booking.room.hotel.telefone,
+                        'horario_checkin': booking.room.hotel.horario_checkin,
+                        'horario_checkout': booking.room.hotel.horario_checkout,
+                    },
+                    'room': {
+                        'numero': booking.room.numero,
+                        'tipo': booking.room.tipo,
+                        'get_tipo_display': booking.room.get_tipo_display(),
+                    },
                 },
                 recipient_list=[booking.user.email]
             )

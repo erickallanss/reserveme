@@ -43,7 +43,17 @@ def release_expired_bookings_task():
                 template_name='emails/booking_expired.html',
                 context={
                     'user_name': booking.user.get_full_name(),
-                    'booking': booking,
+                    'booking': {
+                        'codigo_reserva': booking.codigo_reserva,
+                        'data_checkin': booking.data_checkin,
+                        'data_checkout': booking.data_checkout,
+                        'room': {
+                            'numero': booking.room.numero,
+                            'hotel': {
+                                'nome': booking.room.hotel.nome,
+                            },
+                        },
+                    },
                 },
                 recipient_list=[booking.user.email],
                 fail_silently=True
@@ -91,9 +101,22 @@ def send_booking_reminder_task(self, booking_id: int):
                 template_name='emails/booking_reminder.html',
                 context={
                     'user_name': booking.user.get_full_name(),
-                    'booking': booking,
-                    'hotel': booking.room.hotel,
-                    'room': booking.room,
+                    'booking': {
+                        'codigo_reserva': booking.codigo_reserva,
+                        'data_checkin': booking.data_checkin,
+                        'data_checkout': booking.data_checkout,
+                    },
+                    'hotel': {
+                        'nome': booking.room.hotel.nome,
+                        'endereco': booking.room.hotel.endereco,
+                        'telefone': booking.room.hotel.telefone,
+                        'horario_checkin': booking.room.hotel.horario_checkin,
+                    },
+                    'room': {
+                        'numero': booking.room.numero,
+                        'tipo': booking.room.tipo,
+                        'get_tipo_display': booking.room.get_tipo_display(),
+                    },
                 },
                 recipient_list=[booking.user.email]
             )
