@@ -169,7 +169,7 @@ class RoomService:
         """
         room = self.get_room(room_id)
         
-        updated_room = self.room_repository.update(room_id, {'is_active': True})
+        updated_room = self.room_repository.update(room, is_active=True)
         logger.info(f"Quarto reativado: {room.hotel.nome} - {room.numero}")
         
         return updated_room
