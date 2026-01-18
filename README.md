@@ -336,7 +336,6 @@ docker compose ps mailpit
 
 ## 📝 License
 
-This project was developed as part of a technical challenge.
 
 ---
 
@@ -360,4 +359,3 @@ All requirements implemented:
 
 ---
 
-**Developed with** ❤️ **using Django REST Framework**
