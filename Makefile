@@ -36,22 +36,37 @@ setup: ## Setup completo: build, up, migrate
 	@echo "$(GREEN)✅ Setup completo!$(NC)"
 	@echo "$(YELLOW)📝 Acesse: http://localhost:8000/api/docs/$(NC)"
 
-server: ## Build, cria migrations, migra e sobe servidor
+server: ## Build, cria migrations, migra, popula dados (se vazio) e sobe servidor
 	@echo "$(GREEN)🚀 Iniciando servidor completo...$(NC)"
-	@echo "$(GREEN)🔨 1/4 - Building containers...$(NC)"
+	@echo "$(GREEN)🔨 1/5 - Building containers...$(NC)"
 	@$(DOCKER_COMPOSE) build
-	@echo "$(GREEN)⬆️  2/4 - Subindo containers...$(NC)"
+	@echo "$(GREEN)⬆️  2/5 - Subindo containers...$(NC)"
 	@$(DOCKER_COMPOSE) up -d
 	@echo "$(YELLOW)⏳ Aguardando containers iniciarem...$(NC)"
 	@sleep 5
-	@echo "$(GREEN)📝 3/4 - Criando migrations...$(NC)"
+	@echo "$(GREEN)📝 3/5 - Criando migrations...$(NC)"
 	@$(DOCKER_EXEC) $(PYTHON) manage.py makemigrations
-	@echo "$(GREEN)📊 4/4 - Aplicando migrations...$(NC)"
+	@echo "$(GREEN)📊 4/5 - Aplicando migrations...$(NC)"
 	@$(DOCKER_EXEC) $(PYTHON) manage.py migrate
+	@echo "$(GREEN)🔍 5/5 - Verificando banco de dados...$(NC)"
+	@if $(DOCKER_EXEC) $(PYTHON) check_db.py 2>/dev/null; then \
+		echo "$(YELLOW)🌱 Banco vazio detectado! Populando com dados de teste...$(NC)"; \
+		$(DOCKER_EXEC) $(PYTHON) seed_data.py; \
+		echo "$(GREEN)✅ Dados de teste criados!$(NC)"; \
+		echo ""; \
+		echo "$(YELLOW)👤 Credenciais:$(NC)"; \
+		echo "   Admin:  admin@reserveme.com / admin123"; \
+		echo "   Staff:  staff@reserveme.com / staff123"; \
+		echo "   Cliente: joao.silva@example.com / cliente123"; \
+	else \
+		echo "$(GREEN)✅ Banco já contém dados, pulando seed.$(NC)"; \
+	fi
+	@echo ""
 	@echo "$(GREEN)✅ Servidor rodando!$(NC)"
 	@echo ""
 	@echo "$(YELLOW)🌐 API: http://localhost:8000$(NC)"
 	@echo "$(YELLOW)📚 Docs: http://localhost:8000/api/docs/$(NC)"
+	@echo "$(YELLOW)🔐 Admin: http://localhost:8000/admin/$(NC)"
 	@echo "$(YELLOW)📧 Mailpit: http://localhost:8025$(NC)"
 	@echo ""
 	@echo "$(GREEN)Para ver logs: make logs$(NC)"
@@ -124,6 +139,16 @@ check: ## Verifica problemas no projeto Django
 	@echo "$(GREEN)🔍 Verificando projeto...$(NC)"
 	$(DOCKER_EXEC) $(PYTHON) manage.py check
 
+seed: ## Popula banco com dados de teste (mesmo se já tiver dados)
+	@echo "$(GREEN)🌱 Populando banco com dados de teste...$(NC)"
+	$(DOCKER_EXEC) $(PYTHON) seed_data.py
+	@echo "$(GREEN)✅ Dados criados!$(NC)"
+	@echo ""
+	@echo "$(YELLOW)👤 Credenciais:$(NC)"
+	@echo "   Admin:  admin@reserveme.com / admin123"
+	@echo "   Staff:  staff@reserveme.com / staff123"
+	@echo "   Cliente: joao.silva@example.com / cliente123"
+
 # ============================================================================
 # Testes
 # ============================================================================
@@ -168,7 +193,7 @@ format: ## Formata código com black
 # Banco de Dados
 # ============================================================================
 
-db-reset: ## CUIDADO: Reseta o banco de dados (apaga tudo)
+db-reset: ## CUIDADO: Reseta o banco de dados (apaga tudo) e popula novamente
 	@echo "$(RED)⚠️  ATENÇÃO: Isso irá apagar TODOS os dados!$(NC)"
 	@read -p "Tem certeza? [y/N] " -n 1 -r; \
 	echo; \
@@ -180,6 +205,8 @@ db-reset: ## CUIDADO: Reseta o banco de dados (apaga tudo)
 		sleep 5; \
 		$(MAKE) migrate; \
 		echo "$(GREEN)✅ Banco resetado!$(NC)"; \
+		echo "$(GREEN)🌱 Populando com dados de teste...$(NC)"; \
+		$(MAKE) seed; \
 	fi
 
 db-backup: ## Faz backup do banco de dados
