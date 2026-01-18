@@ -21,6 +21,18 @@ app.autodiscover_tasks()
 # Import tasks from core.utils explicitly
 app.autodiscover_tasks(['core.utils'])
 
+# Configure Celery Beat schedule
+from celery.schedules import crontab
+
+app.conf.beat_schedule = {
+    'release-expired-bookings': {
+        'task': 'reserveme.tasks.release_expired_bookings_task',
+        'schedule': crontab(minute='0', hour='*/1'),  # A cada 1 hora
+    },
+}
+
+app.conf.timezone = 'America/Sao_Paulo'
+
 
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
